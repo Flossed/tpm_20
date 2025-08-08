@@ -1,0 +1,34 @@
+#########################################################################################################
+# .gitignore in root of project
+#  created for nodw.js with express
+# exclude everythin and explicity include what is needed to run project and stored in git.
+#########################################################################################################
+
+/*
+package-lock.json
+*.bak  
+!Dockerfile
+!*.docker
+!.gitignore
+!*.txt
+!*.js
+!*.css
+!*.esj
+!*.json
+!*.ico
+!*.jpg
+!Jenkinsfile
+!/views
+!/jenkins
+!/views/layouts
+!/services
+!/controllers
+!/public
+!/public/css
+!/public/img
+!/models
+!/scripts
+!/test
+!/config
+!/documentation
+#########################################################################################################

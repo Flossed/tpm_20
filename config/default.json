@@ -1,0 +1,48 @@
+{
+  "application": {
+    "ServiceEndPointPort": 10200,
+    "DBTest": "mongodb://192.168.129.197:27017/tpm20_test",
+    "DBPRD": "mongodb://192.168.129.197:27017/tpm20",
+    "dbName": "mongodb://192.168.129.197:27017/tpm20",
+    "logFileName": "tpm20",
+    "applicationName": "TPM 2.0 Document Signing",
+    "logPath": "./logs/",
+    "logTracelevel": "debug",
+    "consoleOutput": "on",
+    "version": "v1.0.0",
+    "lastFix": "Initial TPM 2.0 Implementation",
+    "targetDirectory": "E:\\_Applications\\___Claude\\tpm_20"
+  },
+  "server": {
+    "port": 10200,
+    "host": "localhost"
+  },
+  "mongodb": {
+    "uri": "mongodb://192.168.129.197:27017/tpm20",
+    "options": {
+      "useNewUrlParser": true,
+      "useUnifiedTopology": true
+    }
+  },
+  "tpm": {
+    "enabled": true,
+    "fallbackToSoftware": true,
+    "keyAlgorithm": "ES256",
+    "hashAlgorithm": "SHA256"
+  },
+  "upload": {
+    "maxFileSize": 10485760,
+    "allowedTypes": [".txt", ".md", ".json"],
+    "tempDirectory": "./temp"
+  },
+  "session": {
+    "secret": "tpm20-session-secret-change-in-production",
+    "resave": false,
+    "saveUninitialized": false,
+    "cookie": {
+      "secure": false,
+      "httpOnly": true,
+      "maxAge": 86400000
+    }
+  }
+}

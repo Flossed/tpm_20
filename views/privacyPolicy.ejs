@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('layouts/header'); -%>
+   <body style="background-color: #FEFBE4;">   
+   <%- include('layouts/heading'); -%>
+    <main>
+       <div class="container marketing">
+           <h1>Privacy Policy</h1>
+           <p class="last-updated"><strong>Last Updated:</strong>
+           <%= new Date().toLocaleDateString('en-US', { year: 'numeric' , month: 'long' , day: 'numeric' }) %>
+    </p>
+    <div class="section">
+        <h2>1. Introduction</h2>
+        <p>
+            <%= company.name %> ("we," "our," or "us") is committed to protecting your privacy and ensuring the security
+                of your personal data. This Privacy Policy explains how we collect, use, disclose, and safeguard your
+                information when you use our <%= company.serviceType %> ("Service").
+        </p>
+        <p>This policy complies with the General Data Protection Regulation (GDPR) (EU) 2016/679 and other applicable data protection laws.</p>
+    </div>
+
+    <div class="section">
+        <h2>2. Data Controller Information</h2>
+        <div class="contact-box">
+            <p><strong>Company Name:</strong>
+                <%= company.name %>
+            </p>
+            <p><strong>Address:</strong>
+                <%= company.address %>
+            </p>
+            <p><strong>Email:</strong> <a href="mailto:<%= company.privacyEmail %>">
+                    <%= company.privacyEmail %>
+                </a></p>
+            <p><strong>Phone:</strong>
+                <%= company.phone %>
+            </p>
+            <% if (company.dpo) { %>
+                <p><strong>Data Protection Officer:</strong>
+                    <%= company.dpo.name %> - <a href="mailto:<%= company.dpo.email %>">
+                            <%= company.dpo.email %>
+                        </a>
+                </p>
+                <% } %>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>3. Personal Data We Collect</h2>
+
+        <h3>3.1 Information You Provide Directly</h3>
+        <ul>
+            <% if (dataTypes.identity) { %>
+                <li><strong>Identity Data:</strong>
+                    <%= dataTypes.identity.join(', ') %></li>
+        <% } %>
+        <% if (dataTypes.contact) { %>
+        <li><strong>Contact Data:</strong> <%= dataTypes.contact.join(' , ') %></li>
+        <% } %>
+        <% if (dataTypes.account) { %>
+        <li><strong>Account Data:</strong> <%= dataTypes.account.join(' , ') %></li>
+        <% } %>
+        <% if (dataTypes.transaction) { %>
+        <li><strong>Transaction Data:</strong> <%= dataTypes.transaction.join(' , ') %></li>
+        <% } %>
+        <% if (dataTypes.communication) { %>
+        <li><strong>Communication Data:</strong> <%= dataTypes.communication.join(' , ') %></li>
+        <% } %>
+    </ul>
+
+    <h3>3.2 Information Collected Automatically</h3>
+    <ul>
+        <li><strong>Technical Data:</strong> IP address, browser type, operating system, device information</li>
+        <li><strong>Usage Data:</strong> Pages visited, time spent, click patterns, search queries</li>
+        <% if (features.collectLocation) { %>
+        <li><strong>Location Data:</strong> Geographic location (if permission granted)</li>
+        <% } %>
+        <li><strong>Cookie Data:</strong> As described in our Cookie Policy</li>
+    </ul>
+
+    <h3>3.3 Information from Third Parties</h3>
+    <ul>
+        <% thirdPartySources.forEach(source => { %>
+        <li><%= source %></li>
+        <% }) %>
+    </ul>
+</div>
+
+<div class="section">
+    <h2>4. Legal Basis for Processing</h2>
+    <p>We process your personal data based on the following legal grounds:</p>
+    <ul>
+        <li><strong>Consent:</strong> Where you have given clear consent for specific purposes</li>
+        <li><strong>Contract:</strong> To perform our contract with you or take pre-contractual steps</li>
+        <li><strong>Legal Obligation:</strong> To comply with legal requirements</li>
+        <li><strong>Legitimate Interests:</strong> For our legitimate business interests that don' t override your
+                        rights</li>
+                <li><strong>Vital Interests:</strong> To protect someone's life (rare circumstances)</li>
+                <% if (company.isPublicEntity) { %>
+                    <li><strong>Public Task:</strong> To perform a task in the public interest</li>
+                    <% } %>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>5. How We Use Your Personal Data</h2>
+
+        <h3>5.1 Service Delivery</h3>
+        <ul>
+            <li>To provide and maintain our Service</li>
+            <li>To manage your account and registration</li>
+            <li>To process transactions and payments</li>
+            <li>To provide customer support</li>
+        </ul>
+
+        <h3>5.2 Communication</h3>
+        <ul>
+            <li>To send service-related notifications</li>
+            <li>To respond to inquiries and requests</li>
+            <% if (features.marketing) { %>
+                <li>To send marketing communications (with consent)</li>
+                <% } %>
+        </ul>
+
+        <h3>5.3 Improvement and Analytics</h3>
+        <ul>
+            <li>To analyze usage and improve our Service</li>
+            <li>To develop new features and services</li>
+            <li>To conduct research and analysis</li>
+        </ul>
+
+        <h3>5.4 Legal and Security</h3>
+        <ul>
+            <li>To comply with legal obligations</li>
+            <li>To detect and prevent fraud</li>
+            <li>To enforce our terms and policies</li>
+            <li>To protect rights and safety</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>6. Data Sharing and Disclosure</h2>
+        <p>We may share your personal data with:</p>
+
+        <h3>6.1 Service Providers</h3>
+        <ul>
+            <% serviceProviders.forEach(provider=> { %>
+                <li>
+                    <%= provider %>
+                </li>
+                <% }) %>
+        </ul>
+
+        <h3>6.2 Business Transfers</h3>
+        <p>In connection with mergers, acquisitions, or asset sales</p>
+
+        <h3>6.3 Legal Requirements</h3>
+        <ul>
+            <li>To comply with legal obligations</li>
+            <li>To respond to lawful requests from authorities</li>
+            <li>To protect our rights and property</li>
+        </ul>
+
+        <h3>6.4 With Your Consent</h3>
+        <p>When you explicitly agree to sharing</p>
+
+        <p><strong>We do not sell your personal data to third parties.</strong></p>
+    </div>
+
+    <div class="section">
+        <h2>7. International Data Transfers</h2>
+        <p>Your data may be transferred to and processed in countries outside the European Economic Area (EEA). We
+            ensure appropriate safeguards through:</p>
+        <ul>
+            <li>Standard Contractual Clauses approved by the European Commission</li>
+            <li>Adequacy decisions by the European Commission</li>
+            <li>Your explicit consent for specific transfers</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>8. Data Retention</h2>
+        <p>We retain your personal data only for as long as necessary to fulfill the purposes outlined in this policy,
+            typically:</p>
+        <ul>
+            <li><strong>Account Data:</strong> Duration of account activity plus <%= retention.accountData %> years</li>
+            <li><strong>Transaction Data:</strong>
+                <%= retention.transactionData %> years for tax/legal requirements
+            </li>
+            <li><strong>Marketing Data:</strong> Until consent withdrawn</li>
+            <li><strong>Technical Data:</strong>
+                <%= retention.technicalData %> months for security purposes
+            </li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>9. Your Rights Under GDPR</h2>
+        <p>You have the following rights regarding your personal data:</p>
+
+        <div class="rights-list">
+            <h3>9.1 Access Right</h3>
+            <p>Request a copy of your personal data we hold</p>
+
+            <h3>9.2 Rectification Right</h3>
+            <p>Request correction of inaccurate or incomplete data</p>
+
+            <h3>9.3 Erasure Right ("Right to be Forgotten")</h3>
+            <p>Request deletion of your data in certain circumstances</p>
+
+            <h3>9.4 Restriction Right</h3>
+            <p>Request limitation of processing in certain circumstances</p>
+
+            <h3>9.5 Portability Right</h3>
+            <p>Receive your data in a structured, machine-readable format</p>
+
+            <h3>9.6 Objection Right</h3>
+            <p>Object to processing based on legitimate interests or direct marketing</p>
+
+            <h3>9.7 Automated Decision-Making Rights</h3>
+            <p>Not be subject to solely automated decisions with legal effects</p>
+
+            <h3>9.8 Consent Withdrawal</h3>
+            <p>Withdraw consent at any time (without affecting prior processing)</p>
+        </div>
+
+        <p>To exercise these rights, contact us at <a href="mailto:<%= company.privacyEmail %>">
+                <%= company.privacyEmail %>
+            </a>.</p>
+    </div>
+
+    <div class="section">
+        <h2>10. Data Security</h2>
+        <p>We implement appropriate technical and organizational measures to protect your personal data, including:</p>
+        <ul>
+            <li>Encryption of data in transit and at rest</li>
+            <li>Regular security assessments and audits</li>
+            <li>Access controls and authentication</li>
+            <li>Employee training on data protection</li>
+            <li>Incident response procedures</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>11. Children's Privacy</h2>
+        <p>Our Service is not intended for children under <%= company.minimumAge %> years of age. We do not knowingly
+                collect personal data from children. If you believe we have collected data from a child, please contact
+                us immediately.</p>
+    </div>
+
+    <div class="section">
+        <h2>12. Cookies and Tracking Technologies</h2>
+        <p>We use cookies and similar technologies as described in our <a href="<%= links.cookiePolicy %>"  target="_blank">Cookie
+                Policy</a>. You can manage cookie preferences through your browser settings.</p>
+    </div>
+
+    <div class="section">
+        <h2>13. Third-Party Links</h2>
+        <p>Our Service may contain links to third-party websites. We are not responsible for their privacy practices.
+            Please review their privacy policies before providing personal data.</p>
+    </div>
+
+    <div class="section">
+        <h2>14. Changes to This Policy</h2>
+        <p>We may update this Privacy Policy periodically. We will notify you of material changes by:</p>
+        <ul>
+            <li>Posting the updated policy on our Service</li>
+            <li>Sending notification to registered users</li>
+            <li>Updating the "Last Updated" date</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>15. Contact Us</h2>
+        <p>For questions, concerns, or to exercise your rights, contact us at:</p>
+        <div class="contact-box">
+            <p><strong>Email:</strong> <a href="mailto:<%= company.privacyEmail %>">
+                    <%= company.privacyEmail %>
+                </a></p>
+            <p><strong>Address:</strong>
+                <%= company.address %>
+            </p>
+            <% if (company.dpo) { %>
+                <p><strong>Data Protection Officer:</strong>
+                    <%= company.dpo.name %> - <a href="mailto:<%= company.dpo.email %>">
+                            <%= company.dpo.email %>
+                        </a>
+                </p>
+                <% } %>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>16. Supervisory Authority</h2>
+        <p>You have the right to lodge a complaint with your local data protection supervisory authority if you believe
+            we have violated your data protection rights.</p>
+        <% if (supervisoryAuthority) { %>
+            <div class="contact-box">
+                <p><strong>
+                        Country of Supervisory Authority:
+                    </strong>
+                    <%= supervisoryAuthority.country %>
+                </p>
+                <p><strong>
+                        Supervisory Authority:
+                    </strong>
+                    <%= supervisoryAuthority.name %>
+                </p>
+
+                <p><strong>
+                        Address:
+                    </strong>
+                    <%= supervisoryAuthority.contactAddress %>
+                </p>
+                <p><strong>
+                        E-mail:
+                    </strong>
+                    <%= supervisoryAuthority.contact %>
+                </p>
+                <p><strong>
+                        Phone Number:
+                    </strong>
+                    <%= supervisoryAuthority.contactPhone %>
+                </p>
+            </div>
+            <% } %>
+    </div>
+
+    <div class="highlight">
+        <p><strong>Note:</strong> This privacy policy was generated from a template and has been customized for <%=
+                company.name %>. Last reviewed by legal team on <%= new Date().toLocaleDateString() %>.</p>
+    </div>
+       </div>
+    </main>
+
+    <%- include('layouts/footer'); -%>
+   </body>
+</html>
+

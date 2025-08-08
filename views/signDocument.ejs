@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('layouts/header'); -%>
+   <body style="background-color: #FEFBE4;">   
+   <%- include('layouts/heading'); -%>
+
+    <main>
+       <div class="container">
+          <div class="row">
+            <div class="col-12">
+              <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                  <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+                  <li class="breadcrumb-item"><a href="/documents">Documents</a></li>
+                  <li class="breadcrumb-item"><a href="/documents/<%= document._id %>"><%= document.fileName %></a></li>
+                  <li class="breadcrumb-item active">Sign</li>
+                </ol>
+              </nav>
+              
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="display-5">
+                  <i class="bi bi-pen text-success"></i>
+                  Sign Document
+                </h1>
+                <a href="/documents/<%= document._id %>" class="btn btn-outline-secondary">
+                  <i class="bi bi-arrow-left"></i> Back to Document
+                </a>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row">
+            <!-- Document Information -->
+            <div class="col-lg-6">
+              <div class="card mb-4">
+                <div class="card-header">
+                  <h5 class="mb-0"><i class="bi bi-file-text"></i> Document to Sign</h5>
+                </div>
+                <div class="card-body">
+                  <dl class="row">
+                    <dt class="col-sm-4">File Name:</dt>
+                    <dd class="col-sm-8">
+                      <strong><%= document.fileName %></strong>
+                    </dd>
+                    
+                    <dt class="col-sm-4">Type:</dt>
+                    <dd class="col-sm-8">
+                      <% if (document.fileType === 'text') { %>
+                      <span class="badge bg-primary">Text</span>
+                      <% } else if (document.fileType === 'markdown') { %>
+                      <span class="badge bg-info">Markdown</span>
+                      <% } else if (document.fileType === 'json') { %>
+                      <span class="badge bg-warning">JSON</span>
+                      <% } else { %>
+                      <span class="badge bg-secondary"><%= document.fileType %></span>
+                      <% } %>
+                    </dd>
+                    
+                    <dt class="col-sm-4">Size:</dt>
+                    <dd class="col-sm-8"><%= (document.size / 1024).toFixed(2) %> KB</dd>
+                    
+                    <dt class="col-sm-4">Hash:</dt>
+                    <dd class="col-sm-8">
+                      <code class="small"><%= document.hash.substring(0, 32) %>...</code>
+                    </dd>
+                    
+                    <dt class="col-sm-4">Uploaded:</dt>
+                    <dd class="col-sm-8">
+                      <small><%= new Date(document.uploadedAt).toLocaleString() %></small>
+                    </dd>
+                  </dl>
+                  
+                  <!-- Content Preview -->
+                  <div class="mt-3">
+                    <h6>Content Preview:</h6>
+                    <div class="bg-light p-3 rounded" style="max-height: 200px; overflow-y: auto;">
+                      <% if (document.fileType === 'json') { %>
+                      <pre class="mb-0 small"><%= JSON.stringify(JSON.parse(document.content), null, 2).substring(0, 500) %><% if (JSON.stringify(JSON.parse(document.content), null, 2).length > 500) { %>...<% } %></pre>
+                      <% } else { %>
+                      <pre class="mb-0 small"><%= document.content.substring(0, 500) %><% if (document.content.length > 500) { %>...<% } %></pre>
+                      <% } %>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Signing Form -->
+            <div class="col-lg-6">
+              <div class="card mb-4">
+                <div class="card-header">
+                  <h5 class="mb-0"><i class="bi bi-key"></i> Select Signing Key</h5>
+                </div>
+                <div class="card-body">
+                  <form id="signDocumentForm">
+                    <input type="hidden" name="documentId" value="<%= document._id %>">
+                    
+                    <div class="mb-3">
+                      <label for="keyId" class="form-label">TPM Key <span class="text-danger">*</span></label>
+                      <% if (typeof keys !== 'undefined' && keys.length > 0) { %>
+                      <select class="form-select" id="keyId" name="keyId" required>
+                        <option value="">Select a key for signing</option>
+                        <% keys.forEach(function(key) { %>
+                        <% if (key.status === 'active') { %>
+                        <option value="<%= key._id %>" data-key-name="<%= key.name %>" 
+                                data-in-tpm="<%= key.metadata && key.metadata.get && key.metadata.get('inTPM') %>"
+                                data-usage-count="<%= key.usageCount || 0 %>">
+                          <%= key.name %>
+                          <% if (key.metadata && key.metadata.get && key.metadata.get('description')) { %>
+                          - <%= key.metadata.get('description') %>
+                          <% } %>
+                        </option>
+                        <% } %>
+                        <% }); %>
+                      </select>
+                      <div class="form-text">Only active TPM keys are available for signing</div>
+                      <% } else { %>
+                      <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        No active TPM keys available. <a href="/keys">Create a key first</a>.
+                      </div>
+                      <% } %>
+                    </div>
+                    
+                    <!-- Key Details (shown when key is selected) -->
+                    <div id="keyDetails" class="d-none mb-3">
+                      <div class="card bg-light">
+                        <div class="card-body py-2">
+                          <h6 class="card-title mb-1">Selected Key Details</h6>
+                          <dl class="row mb-0 small">
+                            <dt class="col-sm-4">Name:</dt>
+                            <dd class="col-sm-8" id="selectedKeyName">-</dd>
+                            <dt class="col-sm-4">Type:</dt>
+                            <dd class="col-sm-8" id="selectedKeyType">-</dd>
+                            <dt class="col-sm-4">Usage Count:</dt>
+                            <dd class="col-sm-8" id="selectedKeyUsage">-</dd>
+                          </dl>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                      <label for="signedBy" class="form-label">Signed By</label>
+                      <input type="text" class="form-control" id="signedBy" name="signedBy" 
+                             placeholder="Your name or identifier" value="user">
+                      <div class="form-text">This will be recorded with the signature for audit purposes</div>
+                    </div>
+                    
+                    <!-- Signing Information -->
+                    <div class="alert alert-info">
+                      <i class="bi bi-info-circle"></i>
+                      <strong>Digital Signing Process:</strong>
+                      <ul class="mb-0 mt-2">
+                        <li>Document content is hashed using SHA-256</li>
+                        <li>Hash is signed using ES256 algorithm with your TPM key</li>
+                        <li>Signature is stored and can be verified later</li>
+                      </ul>
+                    </div>
+                    
+                    <% if (typeof keys !== 'undefined' && keys.length > 0) { %>
+                    <div class="d-grid">
+                      <button type="submit" class="btn btn-success btn-lg" id="signBtn">
+                        <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                        <i class="bi bi-pen"></i> Sign Document
+                      </button>
+                    </div>
+                    <% } %>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Existing Signatures -->
+          <% if (typeof signatures !== 'undefined' && signatures.length > 0) { %>
+          <div class="row">
+            <div class="col-12">
+              <div class="card">
+                <div class="card-header">
+                  <h5 class="mb-0"><i class="bi bi-list-check"></i> Existing Signatures</h5>
+                </div>
+                <div class="card-body">
+                  <p class="text-muted">This document has already been signed. You can add additional signatures if needed.</p>
+                  <div class="table-responsive">
+                    <table class="table table-sm">
+                      <thead>
+                        <tr>
+                          <th>Key Used</th>
+                          <th>Signed At</th>
+                          <th>Signed By</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <% signatures.forEach(function(signature) { %>
+                        <tr>
+                          <td><%= signature.keyId.name %></td>
+                          <td><small><%= new Date(signature.signedAt).toLocaleString() %></small></td>
+                          <td><%= signature.signedBy %></td>
+                          <td>
+                            <% if (signature.verificationStatus === 'valid') { %>
+                            <span class="badge bg-success">Valid</span>
+                            <% } else if (signature.verificationStatus === 'invalid') { %>
+                            <span class="badge bg-danger">Invalid</span>
+                            <% } else { %>
+                            <span class="badge bg-secondary">Unverified</span>
+                            <% } %>
+                          </td>
+                        </tr>
+                        <% }); %>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <% } %>
+       </div>
+    </main>
+    
+    <!-- Success Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title text-success">
+              <i class="bi bi-check-circle"></i> Document Signed Successfully
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="alert alert-success">
+              <i class="bi bi-shield-check"></i>
+              <strong>Signature Created!</strong> Your document has been successfully signed using TPM hardware security.
+            </div>
+            
+            <dl class="row">
+              <dt class="col-sm-4">Document:</dt>
+              <dd class="col-sm-8"><%= document.fileName %></dd>
+              <dt class="col-sm-4">Key Used:</dt>
+              <dd class="col-sm-8" id="successKeyName">-</dd>
+              <dt class="col-sm-4">Signed At:</dt>
+              <dd class="col-sm-8" id="successSignedAt">-</dd>
+              <dt class="col-sm-4">Signature:</dt>
+              <dd class="col-sm-8">
+                <textarea class="form-control" id="successSignature" rows="3" readonly></textarea>
+                <button type="button" class="btn btn-outline-primary btn-sm mt-2" onclick="copyToClipboard('successSignature')">
+                  <i class="bi bi-clipboard"></i> Copy Signature
+                </button>
+              </dd>
+            </dl>
+          </div>
+          <div class="modal-footer">
+            <a href="/documents/<%= document._id %>" class="btn btn-primary">
+              <i class="bi bi-eye"></i> View Document Details
+            </a>
+            <button type="button" class="btn btn-success" onclick="signAnother()">
+              <i class="bi bi-plus-lg"></i> Sign Another Document
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Error Modal -->
+    <div class="modal fade" id="errorModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title text-danger">
+              <i class="bi bi-exclamation-triangle"></i> Signing Failed
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="alert alert-danger">
+              <i class="bi bi-x-circle"></i>
+              <strong>Error:</strong> <span id="errorMessage">An error occurred while signing the document.</span>
+            </div>
+            <p>Please check the following:</p>
+            <ul>
+              <li>TPM key is accessible and active</li>
+              <li>Document has not been modified</li>
+              <li>Network connection is stable</li>
+            </ul>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" onclick="retrySign()">
+              <i class="bi bi-arrow-clockwise"></i> Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <%- include('layouts/footer'); -%>
+    <script src="/js/signDocument.js"></script>
+   </body>
+</html>

@@ -1,0 +1,25 @@
+Packages : npm install body-parser cors ejs eslint@8.50.0 express express-fileupload http mongoose@5.12.6 nconf nodemon semver serve-favicon winston
+
+
+git checkout -b featureName
+git add --all
+git commit -m "some commit message" 
+git push origin  featureName
+
+create pull request
+merge to master
+delete orgin featureName
+
+#Create tag
+git tag -a version -m "some mesage"
+git tag -a v0.0.2 -m  "Boilerplate++"
+git push origin --tags
+
+git checkout master
+git pull
+
+git branch -d featureName
+
+git tag -n10
+git describe --tags --abbrev=0
+

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+   <%- include('layouts/header'); -%>
+   <body class="text-center" style="background-color: #FEFBE4;" onload="init();">   
+      <%- include('layouts/heading'); -%>      
+      <textarea style="display:none;" id="dataRecord" ><%= typeof dataRecord !== 'undefined' ? JSON.stringify(dataRecord):'' %></textarea> 
+      <textarea style="display:none;" id="errors" ><%= typeof errors !== 'undefined' ? JSON.stringify(errors):'' %></textarea>                
+      <div class="container marketing">                     
+         <div class="row featurette justify-content-center mx-auto">
+            <div class="alert alert-danger" role="alert" id="loginAlert" style="display:none;">
+               This is a danger alert—check it out!
+            </div>
+            <div class="col-md-7">       
+               <h1 class="mb-5" data-i18n-key="login-title" ></h1>
+               <div class=" mb-5" id="loginTitle">
+                  <p data-i18n-key="login-description"></p>
+                  <p data-i18n-key="login-description-2"></p>
+                  <p data-i18n-key="login-description-3"></p>
+               </div>
+               <div class="mb-5 alert alert-warning" id="loginHelp" >
+                  <p data-i18n-key="login-description-4"></p>
+                  <p data-i18n-key="login-description-45"></p>
+                  <p data-i18n-key="login-description-5"></p>
+                  <p data-i18n-key="login-description-6"></p>
+               </div>
+               <form class="form-signin" action="/login" method="POST" enctype="multipart/form-data">
+                  <div class="form-group row">
+                     <label for="staticEmail" class="col-sm-2 col-form-label" data-i18n-key="login-label-email"></label>
+                     <div class="col-sm-10">
+                        <input type="text" class="form-control" id="userCredential" name='userCredential' required> 
+                      </div>
+                  </div>
+                   <div class="form-group row mb-3">
+                     <label for="currentPassword" class="col-sm-2 col-form-label" data-i18n-key="login-label-password">                                            
+                     </label>
+                     <div class="col-sm-10">
+                     <div class="input-group col-sm-10">
+                        <input type="password"  class="form-control" id="userPassword"  name="userPassword"  placeholder="Enter your current password" required>
+                        <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                           <i class="bi bi-eye"></i>
+                        </button>
+                     </div>
+                     </div>
+                  </div> 
+                  <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>     
+               </form>
+
+            </div>
+            <div class="row-md-7 p-5" id="forgotRegister" style="display:none;">               
+                 <div class="p-2"><a href="/forgotPassword" class="btn btn-lg btn-info btn-block" data-i18n-key="login-button-forgot-password"></a> <a href="/register" class="btn btn-lg btn-info btn-block" data-i18n-key="login-button-register">Register</a></a></div>
+            </div>   
+         </div>
+      </div>  
+      <%- include('layouts/footer'); -%>
+      <script src="/js/login.js"></script>
+   </body>   
+</html>

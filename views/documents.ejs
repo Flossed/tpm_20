@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('layouts/header'); -%>
+   <body style="background-color: #FEFBE4;">   
+   <%- include('layouts/heading'); -%>
+
+    <main>
+       <div class="container">
+          <div class="row">
+            <div class="col-12">
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="display-5">Document Management</h1>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
+                  <i class="bi bi-cloud-upload"></i> Upload Document
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Alert Messages -->
+          <% if (typeof success !== 'undefined' && success) { %>
+          <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <%= success %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+          <% } %>
+          
+          <% if (typeof error !== 'undefined' && error) { %>
+          <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <%= error %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+          <% } %>
+          
+          <!-- File Type Filter -->
+          <div class="row mb-4">
+            <div class="col-12">
+              <div class="card">
+                <div class="card-body">
+                  <div class="d-flex align-items-center">
+                    <span class="me-3">Filter by type:</span>
+                    <div class="btn-group" role="group">
+                      <input type="radio" class="btn-check" name="fileTypeFilter" id="filterAll" value="all" checked>
+                      <label class="btn btn-outline-primary" for="filterAll">All</label>
+                      
+                      <input type="radio" class="btn-check" name="fileTypeFilter" id="filterText" value="text">
+                      <label class="btn btn-outline-primary" for="filterText">Text</label>
+                      
+                      <input type="radio" class="btn-check" name="fileTypeFilter" id="filterMarkdown" value="markdown">
+                      <label class="btn btn-outline-primary" for="filterMarkdown">Markdown</label>
+                      
+                      <input type="radio" class="btn-check" name="fileTypeFilter" id="filterJson" value="json">
+                      <label class="btn btn-outline-primary" for="filterJson">JSON</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Documents List -->
+          <div class="row">
+            <div class="col-12">
+              <% if (typeof documents !== 'undefined' && documents.length > 0) { %>
+              <div class="card">
+                <div class="card-header">
+                  <h5 class="mb-0">Uploaded Documents</h5>
+                </div>
+                <div class="card-body">
+                  <div class="table-responsive">
+                    <table class="table table-hover">
+                      <thead>
+                        <tr>
+                          <th>File Name</th>
+                          <th>Type</th>
+                          <th>Size</th>
+                          <th>Uploaded</th>
+                          <th>Uploaded By</th>
+                          <th>Hash</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <% documents.forEach(function(doc) { %>
+                        <tr data-file-type="<%= doc.fileType %>">
+                          <td>
+                            <div class="d-flex align-items-center">
+                              <% if (doc.fileType === 'text') { %>
+                              <i class="bi bi-file-earmark-text text-primary me-2"></i>
+                              <% } else if (doc.fileType === 'markdown') { %>
+                              <i class="bi bi-file-earmark-code text-info me-2"></i>
+                              <% } else if (doc.fileType === 'json') { %>
+                              <i class="bi bi-file-earmark-code text-warning me-2"></i>
+                              <% } else { %>
+                              <i class="bi bi-file-earmark text-secondary me-2"></i>
+                              <% } %>
+                              <strong><%= doc.fileName %></strong>
+                            </div>
+                          </td>
+                          <td>
+                            <% if (doc.fileType === 'text') { %>
+                            <span class="badge bg-primary">Text</span>
+                            <% } else if (doc.fileType === 'markdown') { %>
+                            <span class="badge bg-info">Markdown</span>
+                            <% } else if (doc.fileType === 'json') { %>
+                            <span class="badge bg-warning">JSON</span>
+                            <% } else { %>
+                            <span class="badge bg-secondary"><%= doc.fileType %></span>
+                            <% } %>
+                          </td>
+                          <td>
+                            <small><%= (doc.size / 1024).toFixed(2) %> KB</small>
+                          </td>
+                          <td>
+                            <small><%= new Date(doc.uploadedAt).toLocaleString() %></small>
+                          </td>
+                          <td>
+                            <small><%= doc.uploadedBy %></small>
+                          </td>
+                          <td>
+                            <code class="small"><%= doc.hash.substring(0, 16) %>...</code>
+                          </td>
+                          <td>
+                            <div class="btn-group" role="group">
+                              <a href="/documents/<%= doc._id %>" class="btn btn-outline-primary btn-sm" title="View Details">
+                                <i class="bi bi-eye"></i>
+                              </a>
+                              <a href="/documents/<%= doc._id %>/sign" class="btn btn-outline-success btn-sm" title="Sign Document">
+                                <i class="bi bi-pen"></i>
+                              </a>
+                              <button type="button" class="btn btn-outline-danger btn-sm" onclick="confirmDelete('<%= doc._id %>', '<%= doc.fileName %>')" title="Delete Document">
+                                <i class="bi bi-trash"></i>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                        <% }); %>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <% } else { %>
+              <div class="text-center py-5">
+                <i class="bi bi-file-earmark-text display-1 text-muted mb-3"></i>
+                <h3 class="text-muted">No Documents Found</h3>
+                <p class="lead text-muted mb-4">Upload your first document to get started with digital signing</p>
+                <button type="button" class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
+                  <i class="bi bi-cloud-upload"></i> Upload Your First Document
+                </button>
+              </div>
+              <% } %>
+            </div>
+          </div>
+       </div>
+    </main>
+    
+    <!-- Upload Document Modal -->
+    <div class="modal fade" id="uploadDocumentModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Upload Document</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <form id="uploadDocumentForm" enctype="multipart/form-data">
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="document" class="form-label">Select Document <span class="text-danger">*</span></label>
+                <input type="file" class="form-control" id="document" name="document" required 
+                       accept=".txt,.md,.json">
+                <div class="form-text">Supported formats: .txt, .md, .json (max 10MB)</div>
+              </div>
+              <div class="mb-3">
+                <label for="uploadedBy" class="form-label">Uploaded By</label>
+                <input type="text" class="form-control" id="uploadedBy" name="uploadedBy" 
+                       placeholder="Your name or identifier" value="user">
+              </div>
+              
+              <!-- File Preview -->
+              <div id="filePreview" class="d-none">
+                <div class="card">
+                  <div class="card-header">
+                    <h6 class="mb-0">File Preview</h6>
+                  </div>
+                  <div class="card-body">
+                    <dl class="row mb-0">
+                      <dt class="col-sm-3">Name:</dt>
+                      <dd class="col-sm-9" id="previewFileName">-</dd>
+                      <dt class="col-sm-3">Size:</dt>
+                      <dd class="col-sm-9" id="previewFileSize">-</dd>
+                      <dt class="col-sm-3">Type:</dt>
+                      <dd class="col-sm-9" id="previewFileType">-</dd>
+                    </dl>
+                    <div class="mt-3">
+                      <label class="form-label small">Content Preview:</label>
+                      <pre id="previewContent" class="bg-light p-2 rounded small" style="max-height: 200px; overflow-y: auto;"></pre>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="alert alert-info mt-3">
+                <i class="bi bi-info-circle"></i>
+                <strong>Note:</strong> Documents are hashed using SHA-256 to ensure integrity. Duplicate documents will be rejected.
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary" disabled id="uploadBtn">
+                <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                Upload Document
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteDocumentModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Delete Document</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="alert alert-danger">
+              <i class="bi bi-exclamation-triangle"></i>
+              <strong>Warning!</strong> This action cannot be undone.
+            </div>
+            <p>Are you sure you want to delete the document "<span id="deleteDocumentName"></span>"?</p>
+            <p class="text-muted"><strong>Note:</strong> Documents with existing signatures cannot be deleted.</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+              <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+              Delete Document
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <%- include('layouts/footer'); -%>
+    <script src="/js/documents.js"></script>
+   </body>
+</html>

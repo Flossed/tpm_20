@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('layouts/header'); -%>
+   <body style="background-color: #FEFBE4;">   
+   <%- include('layouts/heading'); -%>
+
+    <main>
+       <div class="container">
+          <div class="row">
+            <div class="col-12">
+              <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                  <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+                  <li class="breadcrumb-item"><a href="/keys">Keys</a></li>
+                  <li class="breadcrumb-item active"><%= key.name %></li>
+                </ol>
+              </nav>
+              
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="display-5">
+                  <i class="bi bi-key-fill text-primary"></i>
+                  <%= key.name %>
+                </h1>
+                <div class="btn-group" role="group">
+                  <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#csrModal">
+                    <i class="bi bi-file-earmark-text"></i> Generate CSR
+                  </button>
+                  <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#uploadCertModal">
+                    <i class="bi bi-upload"></i> Upload Certificate
+                  </button>
+                  <button type="button" class="btn btn-outline-danger" onclick="confirmDelete('<%= key._id %>', '<%= key.name %>')">
+                    <i class="bi bi-trash"></i> Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row">
+            <!-- Key Information -->
+            <div class="col-lg-6">
+              <div class="card mb-4">
+                <div class="card-header">
+                  <h5 class="mb-0"><i class="bi bi-info-circle"></i> Key Information</h5>
+                </div>
+                <div class="card-body">
+                  <dl class="row">
+                    <dt class="col-sm-4">Name:</dt>
+                    <dd class="col-sm-8"><%= key.name %></dd>
+                    
+                    <dt class="col-sm-4">Status:</dt>
+                    <dd class="col-sm-8">
+                      <% if (key.status === 'active') { %>
+                      <span class="badge bg-success">Active</span>
+                      <% } else if (key.status === 'inactive') { %>
+                      <span class="badge bg-warning">Inactive</span>
+                      <% } else { %>
+                      <span class="badge bg-secondary"><%= key.status %></span>
+                      <% } %>
+                    </dd>
+                    
+                    <dt class="col-sm-4">TPM Handle:</dt>
+                    <dd class="col-sm-8"><code><%= key.tpmHandle %></code></dd>
+                    
+                    <dt class="col-sm-4">Created:</dt>
+                    <dd class="col-sm-8"><%= new Date(key.createdAt).toLocaleString() %></dd>
+                    
+                    <dt class="col-sm-4">Last Used:</dt>
+                    <dd class="col-sm-8">
+                      <% if (key.lastUsed) { %>
+                      <%= new Date(key.lastUsed).toLocaleString() %>
+                      <% } else { %>
+                      <span class="text-muted">Never</span>
+                      <% } %>
+                    </dd>
+                    
+                    <dt class="col-sm-4">Usage Count:</dt>
+                    <dd class="col-sm-8"><span class="badge bg-info"><%= key.usageCount || 0 %></span></dd>
+                    
+                    <% if (key.metadata && key.metadata.get && key.metadata.get('description')) { %>
+                    <dt class="col-sm-4">Description:</dt>
+                    <dd class="col-sm-8"><%= key.metadata.get('description') %></dd>
+                    <% } %>
+                    
+                    <dt class="col-sm-4">In TPM:</dt>
+                    <dd class="col-sm-8">
+                      <% if (key.metadata && key.metadata.get && key.metadata.get('inTPM') === 'true') { %>
+                      <span class="badge bg-success"><i class="bi bi-shield-check"></i> Yes</span>
+                      <% } else { %>
+                      <span class="badge bg-warning"><i class="bi bi-shield-exclamation"></i> Software</span>
+                      <% } %>
+                    </dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Public Key -->
+            <div class="col-lg-6">
+              <div class="card mb-4">
+                <div class="card-header">
+                  <h5 class="mb-0"><i class="bi bi-key"></i> Public Key</h5>
+                </div>
+                <div class="card-body">
+                  <div class="mb-3">
+                    <label class="form-label">Public Key (PEM Format):</label>
+                    <textarea class="form-control" rows="8" readonly id="publicKeyText"><%= key.publicKey %></textarea>
+                  </div>
+                  <button type="button" class="btn btn-outline-primary btn-sm" onclick="copyToClipboard('publicKeyText')">
+                    <i class="bi bi-clipboard"></i> Copy to Clipboard
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Certificate Information -->
+          <div class="row">
+            <div class="col-12">
+              <div class="card mb-4">
+                <div class="card-header">
+                  <h5 class="mb-0"><i class="bi bi-award"></i> Certificate Information</h5>
+                </div>
+                <div class="card-body">
+                  <% if (key.certificateRequest) { %>
+                  <div class="row mb-4">
+                    <div class="col-12">
+                      <h6>Certificate Signing Request (CSR):</h6>
+                      <textarea class="form-control mb-2" rows="6" readonly id="csrText"><%= key.certificateRequest %></textarea>
+                      <button type="button" class="btn btn-outline-primary btn-sm" onclick="copyToClipboard('csrText')">
+                        <i class="bi bi-clipboard"></i> Copy CSR
+                      </button>
+                    </div>
+                  </div>
+                  <% } %>
+                  
+                  <% if (key.certificate) { %>
+                  <div class="row">
+                    <div class="col-12">
+                      <h6>Certificate:</h6>
+                      <textarea class="form-control mb-2" rows="6" readonly id="certificateText"><%= key.certificate %></textarea>
+                      <button type="button" class="btn btn-outline-primary btn-sm" onclick="copyToClipboard('certificateText')">
+                        <i class="bi bi-clipboard"></i> Copy Certificate
+                      </button>
+                    </div>
+                  </div>
+                  <% } %>
+                  
+                  <% if (!key.certificateRequest && !key.certificate) { %>
+                  <div class="text-center py-4">
+                    <i class="bi bi-file-earmark-text display-4 text-muted mb-3"></i>
+                    <p class="text-muted">No certificate or CSR generated yet.</p>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#csrModal">
+                      Generate Certificate Signing Request
+                    </button>
+                  </div>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+          </div>
+       </div>
+    </main>
+    
+    <!-- Generate CSR Modal -->
+    <div class="modal fade" id="csrModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Generate Certificate Signing Request</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <form id="csrForm">
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="commonName" class="form-label">Common Name (CN) <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="commonName" name="commonName" required 
+                       placeholder="example.com">
+                <div class="form-text">The fully qualified domain name or entity name</div>
+              </div>
+              <div class="mb-3">
+                <label for="organization" class="form-label">Organization (O)</label>
+                <input type="text" class="form-control" id="organization" name="organization" 
+                       placeholder="Your Organization Name">
+              </div>
+              <div class="mb-3">
+                <label for="country" class="form-label">Country (C)</label>
+                <input type="text" class="form-control" id="country" name="country" maxlength="2"
+                       placeholder="US" style="text-transform: uppercase;">
+                <div class="form-text">Two-letter country code (ISO 3166)</div>
+              </div>
+              <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i>
+                This will generate a Certificate Signing Request using your TPM key. You can then submit this CSR to a Certificate Authority.
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary">
+                <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                Generate CSR
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Upload Certificate Modal -->
+    <div class="modal fade" id="uploadCertModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Upload Certificate</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <form id="uploadCertForm">
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="certificate" class="form-label">Certificate (PEM Format) <span class="text-danger">*</span></label>
+                <textarea class="form-control" id="certificate" name="certificate" rows="8" required 
+                          placeholder="-----BEGIN CERTIFICATE-----&#10;...&#10;-----END CERTIFICATE-----"></textarea>
+                <div class="form-text">Paste the certificate received from your Certificate Authority</div>
+              </div>
+              <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle"></i>
+                <strong>Note:</strong> Make sure this certificate corresponds to the CSR generated with this key.
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary">
+                <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                Upload Certificate
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteKeyModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Delete Key</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="alert alert-danger">
+              <i class="bi bi-exclamation-triangle"></i>
+              <strong>Warning!</strong> This action cannot be undone.
+            </div>
+            <p>Are you sure you want to delete the key "<span id="deleteKeyName"></span>"?</p>
+            <p class="text-muted">This will permanently remove the key from both the database and the TPM module.</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+              <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+              Delete Key
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <%- include('layouts/footer'); -%>
+    <script src="/js/keyDetail.js"></script>
+   </body>
+</html>
