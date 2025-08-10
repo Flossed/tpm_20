@@ -1,0 +1,7 @@
+{
+  "Provider": "Microsoft Platform Crypto Provider",
+  "KeyName": "ZANDD-CA-Root-4916",
+  "Algorithm": "ECDSA P-256",
+  "Created": "2025-08-10 16:19:45",
+  "KeyPath": "C:\\Users\\officezandd\\AppData\\Local\\Microsoft\\Crypto\\PCPKSP\\2737bfdf139555b4ad719436b5a728d180115b7b\\095570d2d5ad4e6ab64eda00a3b99a9c624e803e.PCPKEY"
+}

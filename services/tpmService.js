@@ -46,10 +46,17 @@ class TPMService {
         this.tpmAvailable = stdout.length > 0;
       }
       logger.info(`TPM availability: ${this.tpmAvailable}`);
+      return this.tpmAvailable;
     } catch (error) {
       logger.error('Error checking TPM availability:', error);
       this.tpmAvailable = false;
+      return false;
     }
+  }
+
+  // Getter method to access current TPM availability status
+  isTPMAvailable() {
+    return this.tpmAvailable;
   }
 
   async createES256KeyPair(keyName) {
@@ -99,7 +106,24 @@ class TPMService {
   async createWindowsTPMKey(keyName) {
     try {
       const path = require('path');
-      const scriptPath = path.join(__dirname, '..', 'scripts', 'working-tpm-cng.ps1');
+      
+      // Check if we're running as Administrator
+      let isAdmin = false;
+      try {
+        const { stdout } = await execAsync('powershell -Command "([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)"');
+        isAdmin = stdout.trim().toLowerCase() === 'true';
+        logger.info(`Administrator privileges: ${isAdmin}`);
+      } catch (adminCheckError) {
+        logger.warn('Could not check administrator privileges:', adminCheckError.message);
+        isAdmin = false;
+      }
+      
+      // Choose script based on admin privileges
+      const scriptPath = isAdmin ? 
+        path.join(__dirname, '..', 'scripts', 'create-hardware-tpm-final.ps1') :
+        path.join(__dirname, '..', 'scripts', 'create-software-key-unified.ps1');
+      
+      logger.info(`Using ${isAdmin ? 'FORCED HARDWARE TPM' : 'software'} key creation script`);      
       
       // Test if we can execute PowerShell 7 first, fallback to PowerShell 5.1
       let psCommand = 'pwsh'; // PowerShell 7
@@ -252,8 +276,20 @@ class TPMService {
       const path = require('path');
       const scriptPath = path.join(__dirname, '..', 'scripts', 'sign-with-cng-key.ps1');
       
-      // Extract key name from handle (remove TPM_ES256_ prefix if present)
-      const keyName = keyHandle.replace('TPM_ES256_', '');
+      // Handle both old format (file paths) and new format (key names)
+      let keyName = keyHandle;
+      
+      // If it's a file path (old format), extract the original key name
+      if (keyHandle.includes('\\') || keyHandle.includes('/')) {
+        // For old keys, we need to use a different approach
+        logger.warn(`Old key format detected (file path): ${keyHandle}`);
+        // Try to extract key name from the path or use the handle as-is
+        keyName = keyHandle;
+      } else {
+        // New format: handle already contains the full key name (TPM_ES256_xxx)
+        // Remove TPM_ES256_ prefix for the signing script
+        keyName = keyHandle.replace('TPM_ES256_', '');
+      }
       
       logger.info(`Signing with CNG key: ${keyName}`);
       
@@ -337,10 +373,74 @@ class TPMService {
 
   async verifySignature(documentHash, signature, publicKey) {
     try {
-      const key = ec.keyFromPublic(publicKey, 'hex');
-      return key.verify(documentHash, signature);
+      // Check if publicKey is in CNG format (Base64) or elliptic format (hex)
+      if (publicKey.startsWith('RUNTMS')) {
+        // This is a CNG public key in Base64 format from hardware TPM
+        logger.info('Verifying CNG signature from hardware TPM');
+        return await this.verifyCNGSignature(documentHash, signature, publicKey);
+      } else {
+        // This is an elliptic.js hex format public key (software key)
+        logger.info('Verifying software signature');
+        const key = ec.keyFromPublic(publicKey, 'hex');
+        return key.verify(documentHash, signature);
+      }
     } catch (error) {
       logger.error('Error verifying signature:', error);
+      return false;
+    }
+  }
+
+  async verifyCNGSignature(documentHash, signature, cngPublicKey) {
+    try {
+      const path = require('path');
+      const scriptPath = path.join(__dirname, '..', 'scripts', 'verify-cng-signature.ps1');
+      
+      // Use PowerShell 7 if available
+      let psCommand = 'pwsh';
+      try {
+        await execAsync('pwsh -Command "Get-Host"');
+      } catch {
+        psCommand = 'powershell';
+      }
+      
+      // Execute the PowerShell verification script
+      const command = `${psCommand} -ExecutionPolicy Bypass -File "${scriptPath}" -DocumentHash "${documentHash}" -Signature "${signature}" -PublicKey "${cngPublicKey}"`;
+      
+      const { stdout, stderr } = await execAsync(command, {
+        timeout: 10000,
+        windowsHide: true
+      });
+      
+      if (stderr && !stderr.includes('Write-Host')) {
+        logger.warn(`PowerShell verification stderr: ${stderr}`);
+      }
+      
+      // Extract JSON from output
+      const lines = stdout.split('\n');
+      let jsonLine = '';
+      
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('{') && trimmed.includes('"Valid"')) {
+          jsonLine = trimmed;
+          break;
+        }
+      }
+      
+      if (!jsonLine) {
+        logger.error(`No JSON found in verification output: ${stdout}`);
+        logger.error(`Full PowerShell output: ${stdout}`);
+        logger.error(`PowerShell stderr: ${stderr}`);
+        return false;
+      }
+      
+      logger.info(`PowerShell verification result: ${jsonLine}`);
+      const result = JSON.parse(jsonLine);
+      logger.info(`Verification result parsed: Valid=${result.Valid}, Error=${result.Error || 'none'}`);
+      return result.Valid === true;
+      
+    } catch (error) {
+      logger.error('Error verifying CNG signature:', error);
       return false;
     }
   }
@@ -443,6 +543,13 @@ class TPMService {
 
   async generateCSR(keyName, keyHandle, publicKey, commonName, organization, country) {
     try {
+      // Check if this is a CNG key (Base64 format starting with RUNTMS or similar)
+      if (publicKey && (publicKey.startsWith('RUNTMS') || publicKey.startsWith('RUNTUw'))) {
+        logger.info('Generating CSR for CNG/TPM key using PowerShell');
+        return await this.generateCNGCSR(keyName, keyHandle, commonName, organization, country);
+      }
+      
+      // For software keys, use forge
       const forge = require('node-forge');
       const csr = forge.pki.createCertificationRequest();
       
@@ -473,6 +580,135 @@ class TPMService {
       return csrPem;
     } catch (error) {
       logger.error('Error generating CSR:', error);
+      throw error;
+    }
+  }
+  
+  async generateCNGCSR(keyName, keyHandle, commonName, organization, country) {
+    try {
+      const path = require('path');
+      
+      // Check if we're running as Administrator (same logic as key creation)
+      let isAdmin = false;
+      try {
+        const { stdout } = await execAsync('powershell -Command "([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)"');
+        isAdmin = stdout.trim().toLowerCase() === 'true';
+        logger.info(`CSR Generation - Administrator privileges: ${isAdmin}`);
+      } catch (adminCheckError) {
+        logger.warn('Could not check administrator privileges for CSR generation:', adminCheckError.message);
+        isAdmin = false;
+      }
+      
+      if (!isAdmin) {
+        throw new Error('CSR generation for hardware TPM keys requires Administrator privileges. Please run the Node.js application as Administrator.');
+      }
+      
+      // Use the pure .NET CSR generation script
+      const scriptPath = path.join(__dirname, '..', 'scripts', 'generate-csr-dotnet.ps1');
+      
+      // Use the keyHandle (actual TPM path) for CSR generation
+      const actualTPMPath = keyHandle || keyName;
+      
+      // Force PowerShell to run as Administrator for TPM access
+      const psArgs = `-ExecutionPolicy Bypass -File "${scriptPath}" -TPMPath "${actualTPMPath}" -CommonName "${commonName}" -Organization "${organization || 'TPM20 Organization'}" -Country "${country || 'US'}"`;
+      
+      logger.info(`Executing hardware TPM CSR generation using pure .NET with TPM path: ${actualTPMPath}`);
+      
+      // Use a different approach to ensure Administrator privileges are inherited
+      const spawn = require('child_process').spawn;
+      
+      return new Promise((resolve, reject) => {
+        // Try running with explicit impersonation of current Administrator context
+        const psCommand = `
+          try {
+            # Force load security assembly and run in current context
+            Add-Type -AssemblyName System.Security
+            $currentIdentity = [System.Security.Principal.WindowsIdentity]::GetCurrent()
+            Write-Host "Current user: $($currentIdentity.Name)"
+            Write-Host "Is Admin: $(([Security.Principal.WindowsPrincipal] $currentIdentity).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))"
+            
+            # Execute the script in current context
+            & "${scriptPath}" -TPMPath "${actualTPMPath}" -CommonName "${commonName}" -Organization "${organization || 'TPM20 Organization'}" -Country "${country || 'US'}"
+          } catch {
+            Write-Host "Error in PowerShell execution: $($_.Exception.Message)"
+            exit 1
+          }
+        `;
+        
+        const ps = spawn('powershell.exe', ['-ExecutionPolicy', 'Bypass', '-Command', psCommand], {
+          stdio: ['pipe', 'pipe', 'pipe'],
+          windowsVerbatimArguments: false,
+          windowsHide: true,
+          shell: false
+        });
+        
+        let stdout = '';
+        let stderr = '';
+        
+        ps.stdout.on('data', (data) => {
+          stdout += data.toString();
+        });
+        
+        ps.stderr.on('data', (data) => {
+          stderr += data.toString();
+        });
+        
+        ps.on('close', (code) => {
+          logger.info(`PowerShell CSR process completed with code: ${code}`);
+          logger.info(`PowerShell CSR stdout: ${stdout}`);
+          if (stderr) logger.warn(`PowerShell CSR stderr: ${stderr}`);
+          
+          if (code !== 0) {
+            reject(new Error(`PowerShell process failed with code ${code}: ${stdout}`));
+            return;
+          }
+          
+          // Process the output
+          try {
+            // Extract JSON from output
+            const lines = stdout.split('\n');
+            let jsonLine = '';
+            
+            for (const line of lines) {
+              const trimmed = line.trim();
+              if (trimmed.startsWith('{') && trimmed.includes('"Success"')) {
+                jsonLine = trimmed;
+                break;
+              }
+            }
+            
+            if (!jsonLine) {
+              reject(new Error('No JSON output from CSR generation script'));
+              return;
+            }
+            
+            const result = JSON.parse(jsonLine);
+            
+            if (!result.Success) {
+              if (result.Error && result.Error.includes('requires Administrator privileges')) {
+                reject(new Error(`Hardware TPM CSR generation requires Administrator privileges. The key was created successfully, but CSR generation needs elevated PowerShell.\n\nTo generate the CSR, run this command from an Administrator PowerShell session:\n\npowershell -ExecutionPolicy Bypass -File "${scriptPath}" -TPMPath "${actualTPMPath}" -CommonName "${commonName}" -Organization "${organization || 'TPM20 Organization'}" -Country "${country || 'US'}"\n\nThis will generate the CSR for your hardware TPM key.`));
+                return;
+              }
+              reject(new Error(result.Error || 'Failed to generate CSR using pure .NET method'));
+              return;
+            }
+            
+            logger.info(`Successfully generated hardware TPM CSR for key: ${keyName}`);
+            resolve(result.CSR);
+            
+          } catch (parseError) {
+            reject(new Error(`Failed to parse CSR generation output: ${parseError.message}`));
+          }
+        });
+        
+        ps.on('error', (error) => {
+          logger.error('PowerShell process error:', error);
+          reject(new Error(`PowerShell process error: ${error.message}`));
+        });
+      });
+      
+    } catch (error) {
+      logger.error('Error generating hardware TPM CSR:', error);
       throw error;
     }
   }

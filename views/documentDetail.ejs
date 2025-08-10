@@ -213,6 +213,10 @@
                                       onclick="showSignatureDetails('<%= signature._id %>')">
                                 <i class="bi bi-info-circle"></i> Details
                               </button>
+                              <button type="button" class="btn btn-outline-danger btn-sm" 
+                                      onclick="confirmDeleteSignature('<%= signature._id %>', '<%= signature.keyId.name %>')">
+                                <i class="bi bi-trash"></i> Delete
+                              </button>
                             </div>
                           </td>
                         </tr>
@@ -230,6 +234,29 @@
                     </a>
                   </div>
                   <% } %>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Signed Documents Section -->
+          <div class="row">
+            <div class="col-12">
+              <div class="card mt-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                  <h5 class="mb-0"><i class="bi bi-file-earmark-check"></i> Signed Documents</h5>
+                  <button type="button" class="btn btn-outline-primary btn-sm" onclick="refreshSignedDocuments()">
+                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                  </button>
+                </div>
+                <div class="card-body">
+                  <div id="signedDocumentsContainer">
+                    <div class="text-center py-3">
+                      <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -257,7 +284,34 @@
       </div>
     </div>
     
-    <!-- Delete Confirmation Modal -->
+    <!-- Delete Signature Confirmation Modal -->
+    <div class="modal fade" id="deleteSignatureModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Delete Signature</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="alert alert-warning">
+              <i class="bi bi-exclamation-triangle"></i>
+              <strong>Warning!</strong> This action cannot be undone.
+            </div>
+            <p>Are you sure you want to delete the signature created with key "<span id="deleteSignatureKeyName"></span>"?</p>
+            <p class="text-muted"><strong>Note:</strong> Deleting this signature will allow you to sign the document with a different key.</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-danger" id="confirmDeleteSignatureBtn">
+              <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+              Delete Signature
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Document Confirmation Modal -->
     <div class="modal fade" id="deleteDocumentModal" tabindex="-1">
       <div class="modal-dialog">
         <div class="modal-content">

@@ -58,6 +58,8 @@ class KeyManagementController {
         ['inTPM', keyData.inTPM ? 'true' : 'false']
       ]);
       
+      logger.info(`Creating key with metadata - inTPM: ${keyData.inTPM}, provider: ${keyData.provider}`);
+      
       // Add Windows certificate flag and provider if present
       if (keyData.windowsCert) {
         metadata.set('windowsCert', 'true');
@@ -79,6 +81,8 @@ class KeyManagementController {
         name: keyName,
         tpmHandle: keyData.handle,
         publicKey: keyData.publicKey,
+        inTPM: keyData.inTPM || false,
+        provider: keyData.provider || null,
         metadata: metadata
       });
       
@@ -109,13 +113,30 @@ class KeyManagementController {
         return res.status(404).json({ error: 'Key not found' });
       }
       
-      const isTPMKey = key.metadata && key.metadata.get('inTPM') === 'true';
-      await tpmService.deleteKey(key.tpmHandle, isTPMKey);
+      const isTPMKey = key.inTPM === true;
       
+      // Try to delete the physical key, but don't fail if it doesn't exist
+      try {
+        await tpmService.deleteKey(key.tpmHandle, isTPMKey);
+        logger.info(`Successfully deleted physical TPM key: ${key.name}`);
+      } catch (deleteError) {
+        logger.warn(`Physical key deletion failed for ${key.name}, but continuing with database cleanup:`, {
+          error: deleteError.message,
+          keyName: key.name,
+          tpmHandle: key.tpmHandle
+        });
+        
+        // Check if it's a "key not found" error - this is expected for orphaned database entries
+        if (deleteError.message && deleteError.message.includes('Key not found')) {
+          logger.info(`Key ${key.name} was already deleted from TPM/CNG store - cleaning up database entry`);
+        }
+      }
+      
+      // Always mark as deleted in database, regardless of physical deletion result
       key.status = 'deleted';
       await key.save();
       
-      logger.info(`Deleted TPM key: ${key.name}`);
+      logger.info(`Marked TPM key as deleted in database: ${key.name}`);
       
       res.json({ success: true, message: 'Key deleted successfully' });
     } catch (error) {
@@ -145,6 +166,59 @@ class KeyManagementController {
       res.status(500).render('errorPage', {
         title: 'Error',
         error: 'Failed to retrieve key details'
+      });
+    }
+  }
+
+  async showTPMManagement(req, res) {
+    try {
+      // Get TPM status
+      const tpmAvailable = tpmService.isTPMAvailable();
+      logger.info(`TPM Management page - TPM Available: ${tpmAvailable}`);
+      
+      // Get all TPM keys with usage statistics
+      const tpmKeys = await TPMKey.find({ 
+        status: { $ne: 'deleted' },
+        inTPM: true 
+      })
+      .sort({ createdAt: -1 })
+      .lean();
+      
+      // Get software keys for comparison
+      const softwareKeys = await TPMKey.find({ 
+        status: { $ne: 'deleted' },
+        $or: [
+          { inTPM: false },
+          { inTPM: { $exists: false } }
+        ]
+      })
+      .sort({ createdAt: -1 })
+      .lean();
+      
+      // Get usage statistics for TPM keys
+      const Signature = require('../models/Signature');
+      const keyUsageStats = {};
+      
+      for (const key of tpmKeys) {
+        const signatureCount = await Signature.countDocuments({ keyId: key._id });
+        keyUsageStats[key._id] = signatureCount;
+      }
+      
+      res.render('tpmManagement', {
+        title: 'Hardware TPM Management',
+        tpmAvailable: tpmAvailable,
+        tpmKeys: tpmKeys,
+        softwareKeys: softwareKeys,
+        keyUsageStats: keyUsageStats,
+        totalTPMKeys: tpmKeys.length,
+        activeTPMKeys: tpmKeys.filter(k => k.status === 'active').length
+      });
+      
+    } catch (error) {
+      logger.error('Error loading TPM management page:', error);
+      res.status(500).render('errorPage', {
+        title: 'Error',
+        error: 'Failed to load TPM management page'
       });
     }
   }
@@ -179,7 +253,10 @@ class KeyManagementController {
       });
     } catch (error) {
       logger.error('Error generating CSR:', error);
-      res.status(500).json({ error: 'Failed to generate CSR' });
+      res.status(500).json({ 
+        error: 'Failed to generate CSR',
+        details: error.message 
+      });
     }
   }
 
@@ -214,7 +291,7 @@ class KeyManagementController {
       const activeKeys = await TPMKey.countDocuments({ status: 'active' });
       const tpmKeys = await TPMKey.countDocuments({ 
         status: { $ne: 'deleted' },
-        'metadata.inTPM': 'true' 
+        inTPM: true 
       });
       
       res.json({

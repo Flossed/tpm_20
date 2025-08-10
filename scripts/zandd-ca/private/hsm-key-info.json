@@ -1,0 +1,9 @@
+{
+  "Algorithm": "ECDSA P-256",
+  "Created": "2025-08-10 16:31:44",
+  "EntropySource": "AMD TPM Hardware",
+  "TPMKeyName": "ZANDD-CA-HSM-8149",
+  "HSMApproach": "Hybrid TPM+Software",
+  "TPMKeyPath": null,
+  "KeyType": "Software ECDSA with TPM entropy"
+}

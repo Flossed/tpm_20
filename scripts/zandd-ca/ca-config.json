@@ -1,0 +1,15 @@
+{
+  "PerformanceProfile": "High-speed operations with hardware entropy",
+  "TPMEntropySource": "ZANDD-CA-HSM-8149",
+  "IssuedCertificates": 1,
+  "ValidityYears": 10,
+  "Created": "2025-08-10 16:31:45",
+  "CAPath": ".\\zandd-ca",
+  "Architecture": "Hybrid TPM+Software",
+  "RootCertThumbprint": "E5DEE81E38EC0EBF42AB4E8099ADD67ADE55F4B4",
+  "HashAlgorithm": "SHA256",
+  "CAName": "ZANDD Root CA",
+  "HSMVersion": "1.0",
+  "KeyBackend": "ZANDD HSM (TPM entropy + Software crypto)",
+  "KeyAlgorithm": "ECDSA P-256"
+}

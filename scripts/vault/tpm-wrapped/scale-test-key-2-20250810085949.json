@@ -1,0 +1,14 @@
+{
+  "iv": "Ci/O1dmm05ty3NZ84sBTIg==",
+  "algorithm": "ECDSA_P256",
+  "wrappedKeyBlob": "BR3Du3N95aqmsTuvdch8Q+I9VDc02D+k1u52osqQg5X06Xn8+cn/XaJ7Xd3esxU6wdIV1NhKJTDULYsM5nG7uqZEgDHtjJcP2XtFcd45ycWube1IxHb7Qxr/7WaBALPEB9ouLpl2zWSr0wTAaRsXIQ==",
+  "created": "2025-08-10 08:59:49",
+  "keyName": "scale-test-key-2",
+  "metadata": {
+    "purpose": "scalability-test",
+    "wrappedSize": 112
+  },
+  "keyId": "7841584f-b7a8-4443-a57e-5c6e8b3cac7d",
+  "wrapMethod": "AES-256-TPM-Simulated",
+  "publicKeyBlob": "RUNTMSAAAACVLMDfQ1EeYIKHgSGuk3wmGHRUG3nb6W0zZSA0yGgcTd9V744LoTydq9NIyvOsrg/UtIZ2MbTCNZDv5QPuJthp"
+}

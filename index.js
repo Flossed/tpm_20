@@ -40,7 +40,7 @@ mongoose.set('debug', true);
 
 mongoose.connect(  dbName );
 app.use( bodyParser.json() );
-app.use( fileUpload() );
+// app.use( fileUpload() ); // Disabled - using multer for file uploads instead
 app.use( bodyParser.urlencoded( {extended:true} ) );
 app.use( express.static( 'public' ) );
 app.use( favicon( path.join( directoryName, 'public', 'img', 'zandd.ico' ) ) );
@@ -72,25 +72,37 @@ function setRouting ()
         // Key Management Routes
         app.get( '/keys', keyManagementController.listKeys );
         app.get( '/keys/:keyId', keyManagementController.viewKey );
+        app.get( '/tpm', keyManagementController.showTPMManagement.bind(keyManagementController) );
         app.get( '/api/keys', keyManagementController.getKeysAPI );
-        app.get( '/api/keys/stats', keyManagementController.getKeysStats );
-        app.post( '/api/keys', keyManagementController.createKey );
-        app.delete( '/api/keys/:keyId', keyManagementController.deleteKey );
-        app.post( '/api/keys/:keyId/csr', keyManagementController.generateCSR );
-        app.post( '/api/keys/:keyId/certificate', keyManagementController.uploadCertificate );
+        app.get( '/api/keys/stats', keyManagementController.getKeysStats.bind(keyManagementController) );
+        app.post( '/api/keys', keyManagementController.createKey.bind(keyManagementController) );
+        app.delete( '/api/keys/:keyId', keyManagementController.deleteKey.bind(keyManagementController) );
+        app.post( '/api/keys/:keyId/csr', keyManagementController.generateCSR.bind(keyManagementController) );
+        app.post( '/api/keys/:keyId/certificate', keyManagementController.uploadCertificate.bind(keyManagementController) );
         
         // Document Management Routes
         app.get( '/documents', documentController.listDocuments );
         app.get( '/documents/:documentId', documentController.viewDocument );
+        app.get( '/documents/:documentId/sign', documentController.showSignPage );
         app.get( '/api/documents', documentController.getDocumentsAPI );
-        app.get( '/api/documents/stats', documentController.getDocumentsStats );
+        app.get( '/api/documents/stats', documentController.getDocumentsStats.bind(documentController) );
         app.post( '/api/documents', documentController.uploadDocument );
         app.delete( '/api/documents/:documentId', documentController.deleteDocument );
-        app.post( '/api/documents/:documentId/sign', documentController.signDocument );
-        app.post( '/api/signatures/:signatureId/verify', documentController.verifySignature );
+        app.post( '/api/documents/:documentId/sign', documentController.signDocument.bind(documentController) );
         
-        // Stats and Activity Routes
-        app.get( '/api/signatures/stats', documentController.getSignaturesStats );
+        // Stats and Activity Routes (must come before parameterized routes)
+        app.get( '/api/signatures/stats', documentController.getSignaturesStats.bind(documentController) );
+        
+        // Signature routes with parameters
+        app.get( '/api/signatures/:signatureId', documentController.getSignatureDetails );
+        app.post( '/api/signatures/:signatureId/verify', documentController.verifySignature );
+        app.delete( '/api/signatures/:signatureId', documentController.deleteSignature );
+        
+        // Signed Document Routes
+        app.get( '/api/documents/:documentId/signed', documentController.getSignedDocuments );
+        app.get( '/api/signeddocuments/:signedDocId/download', documentController.downloadSignedDocument );
+        app.delete( '/api/signeddocuments/:signedDocId', documentController.deleteSignedDocument );
+        
         app.get( '/api/activity/recent', documentController.getRecentActivity );
         
         // Generic Routes

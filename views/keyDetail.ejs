@@ -84,12 +84,17 @@
                     
                     <dt class="col-sm-4">In TPM:</dt>
                     <dd class="col-sm-8">
-                      <% if (key.metadata && key.metadata.get && key.metadata.get('inTPM') === 'true') { %>
-                      <span class="badge bg-success"><i class="bi bi-shield-check"></i> Yes</span>
+                      <% if (key.inTPM === true) { %>
+                      <span class="badge bg-success"><i class="bi bi-shield-check"></i> Hardware TPM</span>
                       <% } else { %>
                       <span class="badge bg-warning"><i class="bi bi-shield-exclamation"></i> Software</span>
                       <% } %>
                     </dd>
+                    
+                    <% if (key.provider) { %>
+                    <dt class="col-sm-4">Provider:</dt>
+                    <dd class="col-sm-8"><%= key.provider %></dd>
+                    <% } %>
                   </dl>
                 </div>
               </div>

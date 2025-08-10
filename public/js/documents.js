@@ -19,9 +19,9 @@ function initializeDocumentManagement() {
 }
 
 function initializeFileUpload() {
-    const uploadBtn = document.getElementById('uploadDocumentBtn');
+    const uploadBtn = document.getElementById('uploadBtn');
     const uploadForm = document.getElementById('uploadDocumentForm');
-    const fileInput = document.getElementById('documentFile');
+    const fileInput = document.getElementById('document');
     const filePreview = document.getElementById('filePreview');
     
     if (uploadBtn) {
@@ -44,9 +44,11 @@ function handleFileSelect(event) {
     const file = event.target.files[0];
     const filePreview = document.getElementById('filePreview');
     const previewContent = document.getElementById('previewContent');
+    const uploadBtn = document.getElementById('uploadBtn');
     
     if (!file) {
-        if (filePreview) filePreview.style.display = 'none';
+        if (filePreview) filePreview.classList.add('d-none');
+        if (uploadBtn) uploadBtn.disabled = true;
         return;
     }
     
@@ -57,6 +59,7 @@ function handleFileSelect(event) {
     if (!allowedTypes.includes(fileExtension)) {
         showNotification('Invalid file type. Only .txt, .md, and .json files are allowed.', 'danger');
         event.target.value = '';
+        if (uploadBtn) uploadBtn.disabled = true;
         return;
     }
     
@@ -64,18 +67,21 @@ function handleFileSelect(event) {
     if (file.size > 10 * 1024 * 1024) {
         showNotification('File size too large. Maximum size is 10MB.', 'danger');
         event.target.value = '';
+        if (uploadBtn) uploadBtn.disabled = true;
         return;
     }
     
-    // Show file info
-    const fileInfo = document.getElementById('fileInfo');
-    if (fileInfo) {
-        fileInfo.innerHTML = `
-            <strong>File:</strong> ${file.name}<br>
-            <strong>Size:</strong> ${(file.size / 1024).toFixed(2)} KB<br>
-            <strong>Type:</strong> ${fileExtension.substring(1).toUpperCase()}
-        `;
-    }
+    // Enable upload button
+    if (uploadBtn) uploadBtn.disabled = false;
+    
+    // Update file preview info
+    const previewFileName = document.getElementById('previewFileName');
+    const previewFileSize = document.getElementById('previewFileSize');
+    const previewFileType = document.getElementById('previewFileType');
+    
+    if (previewFileName) previewFileName.textContent = file.name;
+    if (previewFileSize) previewFileSize.textContent = (file.size / 1024).toFixed(2) + ' KB';
+    if (previewFileType) previewFileType.textContent = fileExtension.substring(1).toUpperCase();
     
     // Read and preview file content
     const reader = new FileReader();
@@ -89,7 +95,7 @@ function handleFileSelect(event) {
         }
         
         if (filePreview) {
-            filePreview.style.display = 'block';
+            filePreview.classList.remove('d-none');
         }
     };
     
@@ -102,9 +108,10 @@ async function handleFileUpload(e) {
     const form = e.target;
     const submitBtn = form.querySelector('button[type="submit"]');
     const originalText = submitBtn.textContent;
-    const fileInput = document.getElementById('documentFile');
+    const fileInput = document.getElementById('document');
+    const uploadedByInput = document.getElementById('uploadedBy');
     
-    if (!fileInput.files[0]) {
+    if (!fileInput || !fileInput.files[0]) {
         showNotification('Please select a file to upload', 'warning');
         return;
     }
@@ -115,7 +122,7 @@ async function handleFileUpload(e) {
         
         const formData = new FormData();
         formData.append('document', fileInput.files[0]);
-        formData.append('uploadedBy', 'user');
+        formData.append('uploadedBy', uploadedByInput ? uploadedByInput.value : 'user');
         
         const response = await fetch('/api/documents', {
             method: 'POST',

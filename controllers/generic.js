@@ -45,11 +45,35 @@ async function aboutHandler ( req,res )
 async function homeHandler ( req,res )
 {   try
     {   logger.trace( applicationName + ':generic:homeHandler():Started' );
-        res.render( 'main' , { currentVersions:versionInformation} );
+        
+        // Import models for dashboard stats
+        const TPMKey = require('../models/TPMKey');
+        const Document = require('../models/Document');
+        const Signature = require('../models/Signature');
+        
+        // Fetch dashboard statistics
+        const [keys, documents, signatures] = await Promise.all([
+            TPMKey.find({ status: { $ne: 'deleted' } }).lean(),
+            Document.find().lean(),
+            Signature.find().lean()
+        ]);
+        
+        res.render( 'main' , { 
+            currentVersions: versionInformation,
+            keys: keys,
+            documents: documents,
+            signatures: signatures
+        });
         logger.trace( applicationName + ':generic:homeHandler():Done' );
     }
     catch ( ex )
     {   logger.exception( applicationName + ':generic:homeHandler():An exception occurred :[' + ex + '].' );
+        res.render( 'main' , { 
+            currentVersions: versionInformation,
+            keys: [],
+            documents: [],
+            signatures: []
+        });
     }
 }
 

@@ -83,7 +83,8 @@ try {
             Algorithm = "ES256"
             Provider = $actualProvider
             PublicKey = $publicBase64
-            Handle = $keyHandle
+            Handle = $keyNameFull  # Store the full key name (TPM_ES256_xxx) for reopening
+            FilePath = $keyHandle  # Store the file path for reference
             InTPM = $isHardwareTPM
             Created = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
         }

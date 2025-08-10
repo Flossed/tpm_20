@@ -48,6 +48,14 @@ const TPMKeySchema = new mongoose.Schema({
     enum: ['active', 'disabled', 'deleted'],
     default: 'active'
   },
+  inTPM: {
+    type: Boolean,
+    default: false
+  },
+  provider: {
+    type: String,
+    default: null
+  },
   metadata: {
     type: Map,
     of: String

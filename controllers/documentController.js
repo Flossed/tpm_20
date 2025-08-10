@@ -2,6 +2,7 @@ const { logger } = require('../services/generic');
 const Document = require('../models/Document');
 const TPMKey = require('../models/TPMKey');
 const Signature = require('../models/Signature');
+const SignedDocument = require('../models/SignedDocument');
 const tpmService = require('../services/tpmService');
 const multer = require('multer');
 const path = require('path');
@@ -145,6 +146,44 @@ class DocumentController {
     }
   }
 
+  async showSignPage(req, res) {
+    try {
+      const { documentId } = req.params;
+      
+      const document = await Document.findById(documentId).lean();
+      if (!document) {
+        return res.status(404).render('errorPage', {
+          title: 'Error',
+          error: 'Document not found'
+        });
+      }
+
+      const activeKeys = await TPMKey.find({ status: 'active' })
+        .select('_id name keyType status metadata usageCount')
+        .lean();
+      
+      logger.info(`Found ${activeKeys.length} active keys for signing`);
+
+      const existingSignatures = await Signature.find({ documentId: documentId })
+        .populate('keyId', 'name')
+        .sort({ signedAt: -1 })
+        .lean();
+
+      res.render('signDocument', {
+        title: `Sign Document: ${document.fileName}`,
+        document: document,
+        keys: activeKeys,
+        signatures: existingSignatures
+      });
+    } catch (error) {
+      logger.error('Error showing sign page:', error);
+      res.status(500).render('errorPage', {
+        title: 'Error',
+        error: 'Failed to load signing page'
+      });
+    }
+  }
+
   async signDocument(req, res) {
     try {
       const { documentId } = req.params;
@@ -165,7 +204,7 @@ class DocumentController {
       }
 
       const documentHash = document.hash;
-      const isTPMKey = key.metadata && key.metadata.get('inTPM') === 'true';
+      const isTPMKey = key.inTPM === true;
       
       // For software keys, use the private key; for TPM keys, use the handle
       const keyMaterial = isTPMKey ? key.tpmHandle : (key.metadata.get('privateKey') || key.tpmHandle);
@@ -185,6 +224,28 @@ class DocumentController {
       key.usageCount = (key.usageCount || 0) + 1;
       await key.save();
 
+      // Create signed document with embedded signature
+      logger.info('About to call createSignedDocument method');
+      try {
+        logger.info('Calling createSignedDocument with:', {
+          documentId: document._id,
+          signatureId: newSignature._id,
+          keyName: key.name,
+          signatureLength: signature.length
+        });
+        await this.createSignedDocument(document, newSignature, key, signature);
+        logger.info('createSignedDocument completed successfully');
+      } catch (createError) {
+        logger.error('Error creating signed document (signing still succeeded):', {
+          message: createError.message,
+          stack: createError.stack,
+          name: createError.name,
+          code: createError.code,
+          fullError: createError
+        });
+        // Don't throw - signing was successful even if signed document creation failed
+      }
+
       logger.info(`Document signed: ${document.fileName} with key: ${key.name}`);
 
       res.json({
@@ -198,6 +259,192 @@ class DocumentController {
     } catch (error) {
       logger.error('Error signing document:', error);
       res.status(500).json({ error: 'Failed to sign document' });
+    }
+  }
+
+  async createSignedDocument(document, signature, key, signatureValue) {
+    try {
+      logger.info('Creating signed documents for:', document.fileName);
+      // Create different formats of signed documents
+      const formats = ['embedded', 'detached'];
+      
+      for (const format of formats) {
+        logger.info(`Creating ${format} signed document`);
+        let signedContent = '';
+        let fileName = '';
+        
+        if (format === 'embedded') {
+          // Embed signature metadata and signature in the document
+          logger.info('Creating embedded signed document content');
+          signedContent = this.createEmbeddedSignedDocument(document, signature, key, signatureValue);
+          fileName = this.generateSignedFileName(document.fileName, key.name, 'signed');
+          logger.info('Embedded content created successfully');
+        } else if (format === 'detached') {
+          // Create a separate signature file
+          logger.info('Creating detached signature content');
+          signedContent = this.createDetachedSignature(document, signature, key, signatureValue);
+          fileName = this.generateSignedFileName(document.fileName, key.name, 'sig');
+          logger.info('Detached content created successfully');
+        }
+        
+        logger.info(`Generated content for ${format}, size: ${signedContent.length}, fileName: ${fileName}`);
+        
+        const signedDoc = new SignedDocument({
+          originalDocumentId: document._id,
+          signatureId: signature._id,
+          fileName: fileName,
+          fileType: document.fileType,
+          content: signedContent,
+          size: Buffer.byteLength(signedContent, 'utf8'),
+          format: format,
+          signatureMetadata: {
+            keyName: key.name,
+            algorithm: 'ES256',
+            provider: key.metadata?.inTPM === 'true' ? 'Hardware TPM' : 'Software',
+            signedAt: signature.signedAt,
+            signedBy: signature.signedBy,
+            isHardwareTPM: key.metadata?.inTPM === 'true'
+          },
+          createdBy: signature.signedBy
+        });
+        
+        logger.info(`Saving ${format} signed document to database`);
+        await signedDoc.save();
+        logger.info(`Created ${format} signed document: ${fileName}`);
+      }
+      logger.info('All signed documents created successfully');
+    } catch (error) {
+      logger.error('Error creating signed document:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+        code: error.code,
+        fullError: error
+      });
+      throw error; // Re-throw to help identify the issue
+    }
+  }
+
+  createEmbeddedSignedDocument(document, signature, key, signatureValue) {
+    const metadata = {
+      originalDocument: {
+        fileName: document.fileName,
+        fileType: document.fileType,
+        hash: document.hash,
+        uploadedAt: document.uploadedAt,
+        uploadedBy: document.uploadedBy
+      },
+      signature: {
+        id: signature._id.toString(),
+        algorithm: 'ES256',
+        value: signatureValue,
+        documentHash: signature.documentHash,
+        signedAt: signature.signedAt,
+        signedBy: signature.signedBy
+      },
+      key: {
+        name: key.name,
+        type: key.keyType,
+        provider: key.metadata?.inTPM === 'true' ? 'Hardware TPM' : 'Software',
+        isHardwareTPM: key.metadata?.inTPM === 'true'
+      }
+    };
+
+    // Create signed document based on file type
+    if (document.fileType === 'json') {
+      try {
+        const originalJson = JSON.parse(document.content);
+        const signedJson = {
+          ...originalJson,
+          _digitalSignature: metadata
+        };
+        return JSON.stringify(signedJson, null, 2);
+      } catch (error) {
+        // If JSON parsing fails, treat as text
+        return this.createTextSignedDocument(document.content, metadata);
+      }
+    } else {
+      // For text and markdown files
+      return this.createTextSignedDocument(document.content, metadata);
+    }
+  }
+
+  createTextSignedDocument(content, metadata) {
+    const signatureBlock = `
+---BEGIN DIGITAL SIGNATURE---
+Document Hash: ${metadata.signature.documentHash}
+Signature Algorithm: ${metadata.signature.algorithm}
+Signature Value: ${metadata.signature.value}
+Signed By: ${metadata.signature.signedBy}
+Signed At: ${metadata.signature.signedAt}
+Key Name: ${metadata.key.name}
+Key Provider: ${metadata.key.provider}
+Hardware TPM: ${metadata.key.isHardwareTPM}
+---END DIGITAL SIGNATURE---`;
+
+    return content + '\n\n' + signatureBlock;
+  }
+
+  createDetachedSignature(document, signature, key, signatureValue) {
+    const signatureData = {
+      documentInfo: {
+        fileName: document.fileName,
+        fileType: document.fileType,
+        hash: document.hash,
+        size: document.size
+      },
+      signature: {
+        id: signature._id.toString(),
+        algorithm: 'ES256',
+        value: signatureValue,
+        documentHash: signature.documentHash,
+        signedAt: signature.signedAt,
+        signedBy: signature.signedBy
+      },
+      key: {
+        name: key.name,
+        type: key.keyType,
+        provider: key.metadata?.inTPM === 'true' ? 'Hardware TPM' : 'Software',
+        isHardwareTPM: key.metadata?.inTPM === 'true'
+      },
+      verification: {
+        instructions: 'To verify this signature, use the original document and this signature file with a compatible verification tool.',
+        format: 'TPM 2.0 Detached Signature'
+      }
+    };
+
+    return JSON.stringify(signatureData, null, 2);
+  }
+
+  generateSignedFileName(originalFileName, keyName, suffix) {
+    const ext = path.extname(originalFileName);
+    const baseName = path.basename(originalFileName, ext);
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
+    
+    if (suffix === 'sig') {
+      return `${baseName}_${keyName}_${timestamp}.sig`;
+    } else {
+      return `${baseName}_${keyName}_${suffix}${ext}`;
+    }
+  }
+
+  async getSignatureDetails(req, res) {
+    try {
+      const { signatureId } = req.params;
+
+      const signature = await Signature.findById(signatureId)
+        .populate('documentId', 'fileName')
+        .populate('keyId', 'name')
+        .lean();
+
+      if (!signature) {
+        return res.status(404).json({ error: 'Signature not found' });
+      }
+
+      res.json(signature);
+    } catch (error) {
+      logger.error('Error fetching signature details:', error);
+      res.status(500).json({ error: 'Failed to fetch signature details' });
     }
   }
 
@@ -244,6 +491,34 @@ class DocumentController {
     } catch (error) {
       logger.error('Error verifying signature:', error);
       res.status(500).json({ error: 'Failed to verify signature' });
+    }
+  }
+
+  async deleteSignature(req, res) {
+    try {
+      const { signatureId } = req.params;
+
+      const signature = await Signature.findById(signatureId);
+      if (!signature) {
+        return res.status(404).json({ error: 'Signature not found' });
+      }
+
+      // Store document ID for response
+      const documentId = signature.documentId;
+
+      // Delete the signature
+      await Signature.findByIdAndDelete(signatureId);
+
+      logger.info(`Signature deleted: ${signatureId} from document: ${documentId}`);
+
+      res.json({
+        success: true,
+        message: 'Signature deleted successfully',
+        documentId: documentId
+      });
+    } catch (error) {
+      logger.error('Error deleting signature:', error);
+      res.status(500).json({ error: 'Failed to delete signature' });
     }
   }
 
@@ -311,6 +586,63 @@ class DocumentController {
     } catch (error) {
       logger.error('Error fetching signature stats:', error);
       res.status(500).json({ error: 'Failed to fetch signature statistics' });
+    }
+  }
+
+  async getSignedDocuments(req, res) {
+    try {
+      const { documentId } = req.params;
+      
+      const signedDocs = await SignedDocument.find({ originalDocumentId: documentId })
+        .populate('signatureId', 'signedAt signedBy')
+        .sort({ createdAt: -1 })
+        .lean();
+      
+      res.json(signedDocs);
+    } catch (error) {
+      logger.error('Error fetching signed documents:', error);
+      res.status(500).json({ error: 'Failed to fetch signed documents' });
+    }
+  }
+
+  async downloadSignedDocument(req, res) {
+    try {
+      const { signedDocId } = req.params;
+      
+      const signedDoc = await SignedDocument.findById(signedDocId);
+      if (!signedDoc) {
+        return res.status(404).json({ error: 'Signed document not found' });
+      }
+      
+      res.setHeader('Content-Disposition', `attachment; filename="${signedDoc.fileName}"`);
+      res.setHeader('Content-Type', 'application/octet-stream');
+      res.send(signedDoc.content);
+      
+      logger.info(`Downloaded signed document: ${signedDoc.fileName}`);
+    } catch (error) {
+      logger.error('Error downloading signed document:', error);
+      res.status(500).json({ error: 'Failed to download signed document' });
+    }
+  }
+
+  async deleteSignedDocument(req, res) {
+    try {
+      const { signedDocId } = req.params;
+      
+      const signedDoc = await SignedDocument.findByIdAndDelete(signedDocId);
+      if (!signedDoc) {
+        return res.status(404).json({ error: 'Signed document not found' });
+      }
+      
+      logger.info(`Deleted signed document: ${signedDoc.fileName}`);
+      
+      res.json({
+        success: true,
+        message: 'Signed document deleted successfully'
+      });
+    } catch (error) {
+      logger.error('Error deleting signed document:', error);
+      res.status(500).json({ error: 'Failed to delete signed document' });
     }
   }
 

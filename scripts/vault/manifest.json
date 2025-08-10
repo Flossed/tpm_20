@@ -1,0 +1,8 @@
+{
+  "provider": "ZANDD HSM",
+  "encryptionAlgorithm": "AES-256-GCM",
+  "keyDerivationMethod": "TPM2_KDF",
+  "version": "1.0.0",
+  "tpmHandle": "0x81000100",
+  "created": "2025-08-10 08:36:09"
+}
