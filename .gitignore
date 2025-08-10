@@ -31,4 +31,9 @@ package-lock.json
 !/test
 !/config
 !/documentation
+!/.github
+!/docs
+!CHANGELOG.md
+!CONTRIBUTING.md
+!*.md
 #########################################################################################################

@@ -1,0 +1,229 @@
+name: 🏗️ Epic
+description: Large feature or initiative spanning multiple stories
+title: "[EPIC] "
+labels: ["epic", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Epic Template
+        Use this template for large features or initiatives that span multiple user stories.
+
+  - type: input
+    id: epic-title
+    attributes:
+      label: Epic Title
+      description: Descriptive title for this epic
+      placeholder: "HSM Vault Management System | Online CA Web Service | Certificate Verification Portal"
+    validations:
+      required: true
+
+  - type: textarea
+    id: epic-description
+    attributes:
+      label: Epic Description
+      description: High-level description of what this epic accomplishes
+      placeholder: |
+        Develop a comprehensive vault management system for the ZANDD HSM that allows users to:
+        - Create and manage TPM-backed secure vaults
+        - Store and organize cryptographic keys with hardware entropy
+        - Perform CRUD operations on wrapped keys
+        - Generate CSRs and integrate with ZANDD CA
+      value: |
+        ### Epic Overview
+        
+        This epic delivers...
+        
+        ### Key Capabilities
+        - 
+        - 
+        - 
+        
+        ### Success Criteria
+        - 
+        - 
+    validations:
+      required: true
+
+  - type: textarea
+    id: business-value
+    attributes:
+      label: Business Value
+      description: Why is this epic important? What value does it provide?
+      placeholder: |
+        This epic transforms the ZANDD HSM from command-line scripts into a production-ready enterprise solution by providing:
+        - Intuitive graphical interface for non-technical users
+        - Reduced operational complexity and training requirements  
+        - Enterprise-grade security with hardware-backed key storage
+        - Cost savings of $20,000+ over commercial HSM solutions
+        - Scalable architecture supporting unlimited certificate management
+      value: |
+        ### Business Impact
+        
+        **Problem Solved**: 
+        
+        **Value Delivered**:
+        - 
+        - 
+        - 
+        
+        **Success Metrics**:
+        - 
+        - 
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Epic Acceptance Criteria
+      description: High-level acceptance criteria for the epic
+      placeholder: |
+        - [ ] Users can create TPM-backed vaults with hardware entropy
+        - [ ] Key CRUD operations support ECDSA P-256 keys
+        - [ ] CSR generation integrates with ZANDD CA
+        - [ ] Performance meets 145 ops/sec benchmark
+        - [ ] Security audit passes with zero critical findings
+        - [ ] User acceptance testing achieves >90% satisfaction
+      value: |
+        ### Epic Acceptance Criteria
+        
+        **Core Functionality**:
+        - [ ] 
+        - [ ] 
+        - [ ] 
+        
+        **Performance Requirements**:
+        - [ ] Operations complete in <100ms
+        - [ ] Support for 10,000+ keys per vault
+        - [ ] 
+        
+        **Security Requirements**:
+        - [ ] Hardware-backed key generation
+        - [ ] AES-256-GCM vault encryption
+        - [ ] 
+        
+        **User Experience**:
+        - [ ] Intuitive interface with <2 hours training
+        - [ ] 
+        - [ ] 
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: Priority level for this epic
+      options:
+        - P0 - Critical
+        - P1 - High
+        - P2 - Medium
+        - P3 - Low
+      default: 1
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which component does this epic relate to?
+      options:
+        - HSM Core (TPM Integration & Hybrid Architecture)
+        - Vault Management (Encryption & Storage)
+        - Key Operations (CRUD & Lifecycle Management)  
+        - Management Interface (Desktop Application)
+        - Web Services (REST API & Online Portal)
+        - Certificate Authority (ZANDD CA Integration)
+        - Security & Cryptography (Hardware Backing & Validation)
+        - Performance & Scalability (145 ops/sec capability)
+        - Documentation & Training
+        - Infrastructure & Deployment
+      default: 3
+    validations:
+      required: true
+
+  - type: input
+    id: target-release
+    attributes:
+      label: Target Release
+      description: Which release should this epic be completed by?
+      placeholder: "v2.0.0 (HSM Management Interface) | v2.1.0 (Online CA Services) | v3.0.0 (Enterprise Features)"
+
+  - type: textarea
+    id: user-stories
+    attributes:
+      label: Related User Stories
+      description: List the user stories that make up this epic (will be created as separate issues)
+      placeholder: |
+        - As a security administrator, I want to create TPM-backed vaults so that I can securely organize cryptographic keys
+        - As a developer, I want to generate ECDSA keys with hardware entropy so that I have maximum security
+        - As a user, I want to generate CSRs from stored keys so that I can obtain certificates from ZANDD CA
+        - As a certificate manager, I want to validate certificates online so that I can verify authenticity
+        - As an enterprise user, I want role-based access control so that I can manage team permissions
+      value: |
+        ### Primary User Stories
+        **Vault Management**:
+        - As a security admin, I want to create secure vaults...
+        - As a user, I want to select existing vaults...
+        
+        **Key Operations**:
+        - As a developer, I want to generate keys...
+        - As a user, I want to view key details...
+        
+        **Certificate Integration**:
+        - As a user, I want to generate CSRs...
+        - As a CA operator, I want to sign certificates...
+        
+        **Additional Stories**:
+        - 
+        - 
+
+  - type: textarea
+    id: technical-notes
+    attributes:
+      label: Technical Considerations
+      description: Any technical considerations, dependencies, or constraints
+      placeholder: |
+        **Architecture Requirements**:
+        - AMD TPM 2.0 with Microsoft Platform Crypto Provider
+        - Hybrid TPM+Software approach (proven 145 ops/sec performance)
+        - AES-256-GCM vault encryption with PBKDF2 key derivation
+        - ECDSA P-256 keys with hardware entropy
+        
+        **Platform Dependencies**:
+        - Windows 10/11 with Administrator privileges for TPM access
+        - .NET 6 framework for desktop application
+        - React/TypeScript for web interfaces
+        - PostgreSQL for certificate database
+        
+        **Integration Points**:
+        - ZANDD CA PowerShell scripts integration
+        - Windows Certificate Store for trust chain
+        - OCSP responder for certificate validation
+      value: |
+        ### Technical Architecture
+        
+        **Core Technologies**:
+        - 
+        - 
+        
+        **Dependencies**:
+        - 
+        - 
+        
+        **Constraints**:
+        - 
+        - 
+        
+        **Performance Targets**:
+        - 
+        - 
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any additional context, mockups, or references
+      placeholder: "Link to design documents, related epics, external references..."

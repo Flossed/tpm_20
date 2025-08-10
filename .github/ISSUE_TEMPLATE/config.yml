@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📚 Documentation
+    url: https://github.com/yourusername/tpm_20/wiki
+    about: Check the project documentation and wiki
+  - name: 💬 Discussions
+    url: https://github.com/yourusername/tpm_20/discussions
+    about: Ask questions and discuss ideas with the community
+  - name: 🔒 Security Issue
+    url: https://github.com/yourusername/tmp_20/security/advisories/new
+    about: Report security vulnerabilities privately

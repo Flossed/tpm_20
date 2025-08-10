@@ -1,0 +1,215 @@
+name: ✅ Task
+description: Development task or technical work item
+title: "[TASK] "
+labels: ["task", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Task Template
+        Use this template for specific development tasks, technical work, or sub-tasks.
+
+  - type: input
+    id: task-title
+    attributes:
+      label: Task Title
+      description: Brief, specific title for this task
+      placeholder: "Implement TPM key generation | Create vault encryption engine | Design key browser UI | Integrate ZANDD CA signing | Build CSR generation API"
+    validations:
+      required: true
+
+  - type: textarea
+    id: task-description
+    attributes:
+      label: Task Description
+      description: Detailed description of what needs to be done
+      placeholder: |
+        **Example Task Descriptions**:
+        
+        **TPM Integration**: Implement TPM key generation using Microsoft Platform Crypto Provider with hardware entropy extraction and hybrid architecture support.
+        
+        **Vault Encryption**: Create vault encryption system using AES-256-GCM with PBKDF2 key derivation, supporting multiple key slots and secure metadata storage.
+        
+        **UI Components**: Design and implement key browser UI with TreeView, filtering, and metadata display using WPF/MVVM pattern.
+        
+        **API Development**: Build REST API endpoints for key CRUD operations with proper authentication, validation, and error handling.
+      value: |
+        ### Task Description
+        
+        **What needs to be implemented**:
+        
+        **Success criteria**:
+        
+        **Technical requirements**:
+    validations:
+      required: true
+
+  - type: dropdown
+    id: task-type
+    attributes:
+      label: Task Type
+      description: What type of task is this?
+      options:
+        - Development (Core implementation)
+        - Testing (Unit/Integration tests)
+        - Documentation (User guides, API docs)
+        - Research (Technical investigation)
+        - Refactoring (Code improvement)
+        - Configuration (Setup/deployment)
+        - Design (UI/UX wireframes)
+        - Security (Audit, vulnerability fixes)
+        - Performance (Optimization)
+        - Integration (Third-party systems)
+      default: 0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: Priority level for this task
+      options:
+        - P0 - Critical
+        - P1 - High
+        - P2 - Medium
+        - P3 - Low
+      default: 2
+    validations:
+      required: true
+
+  - type: dropdown
+    id: effort
+    attributes:
+      label: Effort Estimate
+      description: Estimated effort to complete this task
+      options:
+        - XS (< 2 hours)
+        - S (2-4 hours)
+        - M (4-8 hours)
+        - L (1-2 days)
+        - XL (2-5 days)
+        - XXL (> 1 week)
+      default: 2
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which component does this task relate to?
+      options:
+        - HSM Core (TPM Integration & Hybrid Architecture)
+        - Vault Management (Encryption & Storage)
+        - Key Operations (CRUD & Lifecycle Management)
+        - Management Interface (Desktop Application)
+        - Web Services (REST API & Online Portal)
+        - Certificate Authority (ZANDD CA Integration)
+        - Security & Cryptography (Hardware Backing & Validation)
+        - Performance & Scalability (145 ops/sec capability)
+        - Documentation & Training
+        - Infrastructure & Deployment
+        - Testing & Quality Assurance
+      default: 0
+    validations:
+      required: true
+
+  - type: input
+    id: parent-issue
+    attributes:
+      label: Parent Issue
+      description: Link to parent story or epic (issue number)
+      placeholder: "#123"
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      description: Specific criteria that must be met for this task to be complete
+      placeholder: |
+        **TPM Integration Example**:
+        - [ ] Microsoft Platform Crypto Provider is correctly initialized
+        - [ ] ECDSA P-256 keys are generated with hardware entropy
+        - [ ] TPM key export works with AllowArchiving policy
+        - [ ] Error handling for TPM unavailable scenarios
+        - [ ] Unit tests cover all TPM operations
+        
+        **Vault Encryption Example**:
+        - [ ] AES-256-GCM encryption/decryption works correctly
+        - [ ] PBKDF2 key derivation with configurable iterations
+        - [ ] Vault metadata is properly structured and validated
+        - [ ] Secure memory wiping after operations
+        - [ ] Performance tests show <50ms vault operations
+      value: |
+        ### Acceptance Criteria
+        
+        **Functional Requirements**:
+        - [ ] 
+        - [ ] 
+        - [ ] 
+        
+        **Performance Requirements**:
+        - [ ] 
+        - [ ] 
+        
+        **Security Requirements**:
+        - [ ] 
+        - [ ] 
+        
+        **Testing Requirements**:
+        - [ ] Unit tests written and passing
+        - [ ] Integration tests complete
+        - [ ] Security validation performed
+
+  - type: textarea
+    id: technical-approach
+    attributes:
+      label: Technical Approach
+      description: How should this task be implemented?
+      placeholder: |
+        **Implementation Examples**:
+        
+        **TPM Integration**: Use System.Security.Cryptography.CngKey with Microsoft Platform Crypto Provider. Handle Windows privilege requirements and implement fallback to software entropy if TPM unavailable.
+        
+        **Vault Encryption**: Implement using .NET AesGcm class with PBKDF2 key derivation (SHA-256, 100k iterations). Store salt, IV, and authentication tag with encrypted data. Use secure memory wiping.
+        
+        **UI Development**: Create WPF UserControl with MVVM pattern. Implement TreeView with custom data templates for key hierarchy. Use ObservableCollection for data binding and ICommand for actions.
+        
+        **API Development**: Build ASP.NET Core controllers with proper validation attributes. Implement JWT authentication and role-based authorization. Use repository pattern for data access.
+      value: |
+        ### Technical Implementation Plan
+        
+        **Architecture/Pattern**:
+        
+        **Key Technologies**:
+        
+        **Implementation Steps**:
+        1. 
+        2. 
+        3. 
+        
+        **Code Structure**:
+        
+        **Dependencies**:
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: What other tasks or issues must be completed first?
+      placeholder: "Depends on #121 (Vault structure design), requires TPM service to be implemented"
+
+  - type: textarea
+    id: testing-notes
+    attributes:
+      label: Testing Notes
+      description: How should this task be tested?
+      placeholder: "Unit tests for encryption/decryption, integration tests with vault creation..."
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any additional context, references, or notes
+      placeholder: "Reference implementation, security requirements, performance considerations..."

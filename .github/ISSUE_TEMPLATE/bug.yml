@@ -1,0 +1,229 @@
+name: 🐛 Bug Report
+description: Report a bug or issue
+title: "[BUG] "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Bug Report Template
+        Use this template to report bugs, issues, or unexpected behavior.
+
+  - type: input
+    id: bug-title
+    attributes:
+      label: Bug Title
+      description: Brief, descriptive title for this bug
+      placeholder: "TPM key creation fails with Platform Crypto Provider error | Vault encryption throws AES-GCM exception | CSR generation fails with privilege error | Certificate validation shows wrong chain"
+    validations:
+      required: true
+
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: Bug Description
+      description: Clear description of what the bug is
+      placeholder: |
+        **Common ZANDD HSM Issues**:
+        
+        **TPM Issues**: When creating a new TPM key, the operation fails with 'An unexpected internal error has occurred in the Platform Crypto Provider.' This prevents vault creation and key generation.
+        
+        **Vault Issues**: Vault encryption fails during save operation with AES-GCM authentication tag validation error, corrupting stored keys.
+        
+        **CSR Issues**: Certificate signing request generation fails with 'Access Denied' error even when running as Administrator due to PowerShell privilege inheritance.
+        
+        **Certificate Issues**: Certificate chain validation shows incorrect trust path or fails to recognize ZANDD CA as root authority.
+      value: |
+        ### Bug Description
+        
+        **What's happening**: 
+        
+        **Impact on functionality**:
+        
+        **Error details**:
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Step-by-step instructions to reproduce the bug
+      placeholder: |
+        **Example - TPM Error**:
+        1. Open ZANDD HSM Manager as Administrator
+        2. Click "Create New Vault"
+        3. Enter vault name "TestVault" and password
+        4. Select "Use TPM Hardware" option
+        5. Click "Create Vault"
+        6. Error occurs: "Platform Crypto Provider internal error"
+        
+        **Example - CSR Generation Error**:
+        1. Select existing vault with stored keys
+        2. Right-click on ECDSA key in key browser
+        3. Select "Generate CSR"
+        4. Fill out certificate subject information
+        5. Click "Generate"
+        6. Error: "Access denied" even with Administrator privileges
+      value: |
+        ### Reproduction Steps
+        
+        **Prerequisites**: 
+        - 
+        - 
+        
+        **Steps**:
+        1. 
+        2. 
+        3. 
+        4. 
+        5. 
+        
+        **Expected vs Actual Result**:
+        - Expected: 
+        - Actual: 
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: What should happen instead?
+      placeholder: "TPM key should be created successfully and vault should be initialized"
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: Actual Behavior
+      description: What actually happens?
+      placeholder: "Operation fails with Platform Crypto Provider error"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: How severe is this bug?
+      options:
+        - S0 - Critical (System unusable)
+        - S1 - High (Major feature broken)
+        - S2 - Medium (Feature partially broken)
+        - S3 - Low (Minor issue)
+      default: 1
+    validations:
+      required: true
+
+  - type: dropdown
+    id: frequency
+    attributes:
+      label: Frequency
+      description: How often does this bug occur?
+      options:
+        - Always (100%)
+        - Often (75-99%)
+        - Sometimes (25-74%)
+        - Rarely (1-24%)
+        - Once (Unable to reproduce)
+      default: 0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which component is affected?
+      options:
+        - HSM Core (TPM Integration & Hybrid Architecture)
+        - Vault Management (Encryption & Storage)
+        - Key Operations (CRUD & Lifecycle Management)
+        - Management Interface (Desktop Application)
+        - Web Services (REST API & Online Portal)
+        - Certificate Authority (ZANDD CA Integration)
+        - Security & Cryptography (Hardware Backing & Validation)
+        - Performance & Scalability (145 ops/sec capability)
+        - Documentation & Training
+        - Infrastructure & Deployment
+      default: 0
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: System and environment information
+      placeholder: |
+        - OS: Windows 11 Professional (22H2)
+        - TPM: AMD fTPM 2.0 (firmware version x.x.x)
+        - .NET: 6.0.21
+        - PowerShell: 5.1.22621.2428
+        - ZANDD HSM Version: 1.0.0
+        - Administrator Rights: Yes/No
+        - TPM Status: Available/Ready (check with tpm.msc)
+        - Platform Crypto Provider: Available
+      value: |
+        **System Environment**:
+        - OS: 
+        - TPM Hardware: 
+        - TPM Status: 
+        - .NET Version: 
+        - PowerShell Version: 
+        - ZANDD HSM Version: 
+        - Running as Administrator: 
+        - Platform Crypto Provider Available: 
+        
+        **Additional Context**:
+        - Recent Windows Updates: 
+        - Antivirus Software: 
+        - Other Security Tools: 
+
+  - type: textarea
+    id: error-logs
+    attributes:
+      label: Error Messages/Logs
+      description: Any error messages, stack traces, or log entries
+      placeholder: |
+        ```
+        System.Security.Cryptography.CngException: An unexpected internal error has occurred in the Platform Crypto Provider.
+           at System.Security.Cryptography.CngKey.Create(CngAlgorithm algorithm, String keyName, CngKeyCreationParameters creationParameters)
+        ```
+      render: shell
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Add screenshots or recordings if applicable
+      placeholder: "Drag and drop images here or paste from clipboard"
+
+  - type: textarea
+    id: workaround
+    attributes:
+      label: Workaround
+      description: Is there a temporary workaround for this issue?
+      placeholder: "Using software keys instead of TPM keys works as a temporary solution"
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other context about the problem
+      placeholder: "This issue started after Windows update KB5028185..."
+
+  - type: checkboxes
+    id: troubleshooting
+    attributes:
+      label: Troubleshooting Done
+      description: What troubleshooting steps have you already tried?
+      options:
+        - label: Restarted the application
+        - label: Ran as Administrator
+        - label: Checked TPM status (tpm.msc)
+        - label: Verified Administrator privileges
+        - label: Tried on different machine
+        - label: Checked Windows Event Logs

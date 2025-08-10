@@ -1,0 +1,51 @@
+# Component Labels
+component/hsm-core:
+  - any: ['**/hsm/**/*', '**/tpm/**/*', '**/crypto/**/*']
+  - any: ['**/*tpm*', '**/*hsm*', '**/*crypto*']
+
+component/web-services:
+  - any: ['**/api/**/*', '**/web/**/*', '**/server/**/*']
+  - any: ['**/*api*', '**/*web*', '**/*server*']
+
+component/ui:
+  - any: ['**/ui/**/*', '**/interface/**/*', '**/frontend/**/*']
+  - any: ['**/*ui*', '**/*interface*', '**/*frontend*']
+
+component/certificate-authority:
+  - any: ['**/ca/**/*', '**/cert/**/*', '**/certificate/**/*']
+  - any: ['**/*ca*', '**/*cert*', '**/*certificate*']
+
+component/security:
+  - any: ['**/security/**/*', '**/auth/**/*', '**/encryption/**/*']
+  - any: ['**/*security*', '**/*auth*', '**/*encryption*']
+
+component/documentation:
+  - any: ['**/*.md', '**/docs/**/*', '**/documentation/**/*']
+
+component/infrastructure:
+  - any: ['**/deploy/**/*', '**/docker/**/*', '**/.github/**/*']
+  - any: ['**/*deploy*', '**/*docker*', '**/*infrastructure*']
+
+component/testing:
+  - any: ['**/test/**/*', '**/tests/**/*', '**/*test*']
+  - any: ['**/*.test.*', '**/*.spec.*']
+
+# Priority Labels (based on content)
+priority/high:
+  - any: ['critical', 'urgent', 'blocker', 'security']
+
+priority/medium:
+  - any: ['important', 'enhancement']
+
+# Size Labels
+size/xs:
+  - any: ['**/*.md']
+
+size/s:
+  - any: ['**/*.yml', '**/*.yaml', '**/*.json']
+
+size/m:
+  - any: ['**/*.js', '**/*.ts', '**/*.cs']
+
+size/l:
+  - any: ['**/*.ps1', '**/*.py']

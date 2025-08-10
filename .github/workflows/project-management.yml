@@ -1,0 +1,248 @@
+name: 📋 Project Management Automation
+
+on:
+  issues:
+    types: [opened, edited, closed, reopened]
+  pull_request:
+    types: [opened, closed, merged]
+
+jobs:
+  auto-assign-labels:
+    runs-on: ubuntu-latest
+    if: github.event.action == 'opened'
+    steps:
+      - name: Auto-assign component labels
+        uses: github/issue-labeler@v3.0
+        with:
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          configuration-path: .github/labeler-config.yml
+
+  epic-management:
+    runs-on: ubuntu-latest
+    if: contains(github.event.issue.labels.*.name, 'epic')
+    steps:
+      - name: Create epic project board
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { data: projects } = await github.rest.projects.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+            
+            const epicTitle = context.payload.issue.title.replace('[EPIC] ', '');
+            const boardName = `Epic: ${epicTitle}`;
+            
+            const existingProject = projects.find(p => p.name === boardName);
+            if (!existingProject) {
+              const { data: project } = await github.rest.projects.createForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: boardName,
+                body: `Project board for epic: ${epicTitle}`,
+              });
+              
+              // Create columns
+              const columns = ['Backlog', 'In Progress', 'Review', 'Done'];
+              for (const column of columns) {
+                await github.rest.projects.createColumn({
+                  project_id: project.id,
+                  name: column
+                });
+              }
+            }
+
+  story-points-validation:
+    runs-on: ubuntu-latest
+    if: contains(github.event.issue.labels.*.name, 'story')
+    steps:
+      - name: Validate story points
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const body = context.payload.issue.body || '';
+            const storyPointsMatch = body.match(/Story Points.*?(\d+)/s);
+            
+            if (!storyPointsMatch) {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: '⚠️ **Missing Story Points**: Please add story point estimation to this user story.'
+              });
+            }
+
+  task-assignment:
+    runs-on: ubuntu-latest
+    if: contains(github.event.issue.labels.*.name, 'task')
+    steps:
+      - name: Auto-assign based on component
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const labels = context.payload.issue.labels;
+            const componentTeams = {
+              'component/hsm-core': ['developer1'],
+              'component/web-services': ['developer2'],
+              'component/ui': ['developer3'],
+              'component/security': ['security-team']
+            };
+            
+            for (const label of labels) {
+              if (componentTeams[label.name]) {
+                await github.rest.issues.addAssignees({
+                  issue_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  assignees: componentTeams[label.name]
+                });
+                break;
+              }
+            }
+
+  release-preparation:
+    runs-on: ubuntu-latest
+    if: contains(github.event.issue.labels.*.name, 'release')
+    steps:
+      - name: Create release milestone
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const body = context.payload.issue.body || '';
+            const versionMatch = body.match(/Release Version.*?([v]?\d+\.\d+\.\d+)/s);
+            const dateMatch = body.match(/Target Release Date.*?(\d{4}-\d{2}-\d{2})/s);
+            
+            if (versionMatch) {
+              const version = versionMatch[1];
+              const dueDate = dateMatch ? dateMatch[1] + 'T23:59:59Z' : null;
+              
+              try {
+                await github.rest.issues.createMilestone({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title: version,
+                  description: `Release ${version}`,
+                  due_on: dueDate
+                });
+                
+                await github.rest.issues.update({
+                  issue_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  milestone: version
+                });
+              } catch (error) {
+                console.log('Milestone might already exist:', error.message);
+              }
+            }
+
+  bug-triage:
+    runs-on: ubuntu-latest
+    if: contains(github.event.issue.labels.*.name, 'bug')
+    steps:
+      - name: Bug triage automation
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const body = context.payload.issue.body || '';
+            const severityMatch = body.match(/Severity.*?S(\d)/s);
+            
+            if (severityMatch) {
+              const severity = parseInt(severityMatch[1]);
+              
+              // Critical and High severity bugs
+              if (severity <= 1) {
+                await github.rest.issues.addLabels({
+                  issue_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  labels: ['priority/high', 'needs-immediate-attention']
+                });
+                
+                // Notify team for critical bugs
+                if (severity === 0) {
+                  await github.rest.issues.createComment({
+                    issue_number: context.issue.number,
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    body: '🚨 **CRITICAL BUG ALERT**: This issue has been marked as critical and requires immediate attention. Please prioritize accordingly.'
+                  });
+                }
+              }
+            }
+
+  issue-metrics:
+    runs-on: ubuntu-latest
+    if: github.event.action == 'closed'
+    steps:
+      - name: Calculate and comment metrics
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const createdAt = new Date(issue.created_at);
+            const closedAt = new Date(issue.closed_at);
+            const cycleTime = Math.ceil((closedAt - createdAt) / (1000 * 60 * 60 * 24)); // days
+            
+            const labels = issue.labels.map(l => l.name);
+            const isStory = labels.includes('story');
+            const isTask = labels.includes('task');
+            const isBug = labels.includes('bug');
+            
+            let metrics = `## 📊 Issue Metrics\n\n`;
+            metrics += `- **Cycle Time**: ${cycleTime} days\n`;
+            metrics += `- **Issue Type**: ${isStory ? 'Story' : isTask ? 'Task' : isBug ? 'Bug' : 'Other'}\n`;
+            
+            if (isStory) {
+              const body = issue.body || '';
+              const storyPointsMatch = body.match(/Story Points.*?(\d+)/s);
+              if (storyPointsMatch) {
+                const points = parseInt(storyPointsMatch[1]);
+                const velocity = points / cycleTime;
+                metrics += `- **Story Points**: ${points}\n`;
+                metrics += `- **Velocity**: ${velocity.toFixed(2)} points/day\n`;
+              }
+            }
+            
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: metrics
+            });
+
+  pr-story-linking:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.action == 'opened'
+    steps:
+      - name: Link PR to stories
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const prBody = context.payload.pull_request.body || '';
+            const issueNumbers = prBody.match(/#\d+/g);
+            
+            if (issueNumbers) {
+              for (const issueRef of issueNumbers) {
+                const issueNumber = issueRef.substring(1);
+                try {
+                  const { data: issue } = await github.rest.issues.get({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issueNumber
+                  });
+                  
+                  const labels = issue.labels.map(l => l.name);
+                  if (labels.includes('story') || labels.includes('task')) {
+                    await github.rest.issues.createComment({
+                      issue_number: issueNumber,
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      body: `🔗 **Linked Pull Request**: #${context.payload.pull_request.number} - ${context.payload.pull_request.title}`
+                    });
+                  }
+                } catch (error) {
+                  console.log(`Could not process issue ${issueNumber}:`, error.message);
+                }
+              }
+            }

@@ -1,0 +1,50 @@
+Can you help me create a web applicaiton which can use the hardware tpm of the computer to create ES256 keypairs which can be used for signing documents.
+
+I would like the TPM_20 to work with node.js express, and mongdodb, and use E:\_Applications\___Claude\TEMPLATE as a template to create. 
+The directory in which this tokenizer shall be put is : E:\_Applications\___Claude\tpm_20.
+the stack is: 
+- mongodb for all the uploaded text on which the tokenizer will constantly recalibrate its vocabulary.
+  url = mongodb://192.168.129.197:27017/tpm20
+- express
+- nodejs
+- eslint
+- .npmrc 
+  @jridgewell:registry=https://registry.npmjs.org/
+  @zandd:registry=http://192.168.129.196:8081/repository/zandd-npm-hosted/
+  registry=http://192.168.129.196:8081/repository/zandd-npm-proxy/ 
+- logging only using "@zandd/app-logger": "^1.0.2",     nothing else.
+
+directory structure : 
+.git : a local git repository
+config : which contains a json file which contains all the configurable items in the project.
+controllers : which according to MVC pattern contains the controllers that manage the project.
+documentation : for all the *.md files which are created to support the project.
+models : containing the MODELS fromthe MVC pattern which are all created in mongoose
+public : containing CSS for stylesheets, js for clientside javascript, img for images used in the project, and lang for all the text used in the application ( purpose to support multilingual applications)
+services : for all the middleware created which is to contain the bulk of the processing and business logic and is called from the controllers
+terms : supports static json files for privacy, terms and cooky policy. ( can be moved to config)
+test : for all unit and integration tests created using mocha, nyc, chai in a tdd approach should have 100% coverage
+views : containing the VIEW in the MCV pattern which are EJS files 
+        the EJS files do not contain:
+        - CSS this will go in the public/css subdirectory.
+        - javascript this goes in the public/js subdirectory where the javascript file bares the same name as the view file and is included in the ejs file at the end. 
+        The ejs file does contain: 
+        - templates for header, footer and any other reocurring page elements that make up the style of the application.
+        
+The main file will be called index.js
+there is a showChangeCounts.js in the root to be copied from the template, which is a helper function for stats.
+there is a updateVersions.js in the root to be copied from the template, which is a helper function for stats.
+there is a terms, privacy and cooky-policy page which should be copied from the template
+
+Functionality: 
+The TPM 20 application allows a user to upload a document ( textfile or .md file, or json file), which is then persisten in the mongodb. 
+this uploaded file can then be signed using a previously created ES256 key.
+THE application allows the user to create multiple ES256 keys, and named them, the keys should be stored in the TPM module. 
+The functionality of the application should be able to view, create and delete a keypair. the application should also be able to create a crs of the keypair so that it can be signed by a third party and
+used in a generally accible public key list if required. 
+the signed document should also be persisted in mongodb. 
+the signature of the signed  document should be validated agains the TPM and show wether or not the signature is correct.
+
+
+I wish a full github documentation flow with this specification as leading, and be able to create issues from which the project will be able to be managed. 
+I also wish for github workflow which allows to be run every push, it should verify the correct running of unit tests, owasp, and lint

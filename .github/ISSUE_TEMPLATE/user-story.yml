@@ -1,0 +1,216 @@
+name: 📖 User Story
+description: Feature request from user perspective
+title: "[STORY] "
+labels: ["story", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## User Story Template
+        Use this template for user-facing features and functionality.
+
+  - type: input
+    id: story-title
+    attributes:
+      label: User Story Title
+      description: Brief title describing the user story
+      placeholder: "Create TPM-backed vault | Generate ECDSA key with hardware entropy | Generate CSR from stored key | Validate certificate chain"
+    validations:
+      required: true
+
+  - type: textarea
+    id: user-story
+    attributes:
+      label: User Story
+      description: Write the story in the format "As a [user type], I want [goal] so that [benefit]"
+      placeholder: |
+        Examples:
+        - As a security administrator, I want to create TPM-backed vaults so that I can securely store keys with hardware-level protection
+        - As a developer, I want to generate ECDSA P-256 keys with TPM entropy so that I have maximum cryptographic security
+        - As a certificate manager, I want to generate CSRs from stored keys so that I can obtain signed certificates from ZANDD CA
+        - As a system operator, I want to validate certificate chains so that I can verify authenticity and trust
+      value: |
+        **As a** [security admin | developer | certificate manager | system operator | end user]
+        **I want** [specific capability]
+        **So that** [business value or benefit]
+        
+        ### User Story
+        As a ____________, I want ____________ so that ____________.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      description: Specific, testable criteria that must be met (use Given/When/Then format)
+      placeholder: |
+        **Vault Creation Example**:
+        Given I am on the ZANDD HSM Manager main screen
+        When I click "Create New Vault"
+        Then I should see a vault creation dialog with TPM status
+        And I should be able to enter vault name and password
+        And the system should generate TPM entropy for vault encryption
+        And the vault should be created and appear in the vault list
+        And the vault should show as "TPM-backed" in the status
+        
+        **Key Generation Example**:
+        Given I have selected an active vault
+        When I click "Generate New Key"
+        Then I should see key creation options (ECDSA P-256, RSA, etc.)
+        And I should be able to specify key usage and subject information
+        And the system should use TPM entropy for key generation
+        And the key should be stored encrypted in the vault
+        And the key should appear in the key browser with metadata
+      value: |
+        ### Acceptance Criteria
+        
+        **Scenario 1: Primary Flow**
+        **Given** I am [context/precondition]
+        **When** I [action taken]
+        **Then** I should [expected outcome]
+        **And** [additional verification]
+        
+        **Scenario 2: Alternative Flow**
+        **Given** 
+        **When** 
+        **Then** 
+        **And** 
+        
+        **Scenario 3: Error Handling**
+        **Given** 
+        **When** 
+        **Then** 
+        **And** 
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: Priority level for this story
+      options:
+        - P0 - Critical
+        - P1 - High
+        - P2 - Medium
+        - P3 - Low
+      default: 2
+    validations:
+      required: true
+
+  - type: dropdown
+    id: story-points
+    attributes:
+      label: Story Points
+      description: Estimated effort (Fibonacci sequence)
+      options:
+        - "1"
+        - "2" 
+        - "3"
+        - "5"
+        - "8"
+        - "13"
+        - "21"
+      default: 2
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which component does this story relate to?
+      options:
+        - HSM Core (TPM Integration & Hybrid Architecture)
+        - Vault Management (Encryption & Storage)
+        - Key Operations (CRUD & Lifecycle Management)
+        - Management Interface (Desktop Application)
+        - Web Services (REST API & Online Portal)
+        - Certificate Authority (ZANDD CA Integration)  
+        - Security & Cryptography (Hardware Backing & Validation)
+        - Performance & Scalability (145 ops/sec capability)
+        - Documentation & Training
+        - Infrastructure & Deployment
+      default: 3
+    validations:
+      required: true
+
+  - type: input
+    id: epic-link
+    attributes:
+      label: Parent Epic
+      description: Link to parent epic (issue number)
+      placeholder: "#123"
+
+  - type: textarea
+    id: mockups
+    attributes:
+      label: Mockups/Wireframes
+      description: UI mockups, wireframes, or design references
+      placeholder: "Attach images or provide links to design assets"
+
+  - type: textarea
+    id: technical-details
+    attributes:
+      label: Technical Details
+      description: Technical implementation notes or constraints
+      placeholder: |
+        **Implementation Notes**:
+        - Use TPM Microsoft Platform Crypto Provider for key generation
+        - AES-256-GCM encryption for vault storage with PBKDF2 key derivation
+        - ECDSA P-256 keys with SHA-256 hashing
+        - WPF/MVVM pattern for desktop interface
+        - REST API endpoints: GET/POST/PUT/DELETE for key operations
+        - Integration with existing ZANDD CA PowerShell scripts
+        - SQLite for local vault metadata, PostgreSQL for enterprise
+        
+        **Security Requirements**:
+        - Administrator privileges required for TPM operations
+        - Hardware entropy validation and attestation
+        - Secure key deletion and memory wiping
+        - Certificate chain validation against ZANDD CA
+      value: |
+        ### Technical Implementation
+        
+        **Architecture**:
+        - 
+        - 
+        
+        **APIs/Endpoints**:
+        - 
+        - 
+        
+        **Security Considerations**:
+        - 
+        - 
+        
+        **Performance Requirements**:
+        - 
+        - 
+
+  - type: textarea
+    id: definition-of-done
+    attributes:
+      label: Definition of Done
+      description: Checklist of what must be completed
+      placeholder: |
+        - [ ] Feature implemented and tested
+        - [ ] Unit tests written and passing
+        - [ ] Integration tests passing
+        - [ ] Code reviewed and approved
+        - [ ] Documentation updated
+        - [ ] Security review completed
+      value: |
+        - [ ] Feature implemented and tested
+        - [ ] Unit tests written and passing
+        - [ ] Integration tests passing
+        - [ ] Code reviewed and approved
+        - [ ] Documentation updated
+        - [ ] Security review completed
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any additional context, dependencies, or notes

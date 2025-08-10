@@ -1,0 +1,219 @@
+name: 🚀 Release
+description: Plan and track a product release
+title: "[RELEASE] "
+labels: ["release", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Release Template
+        Use this template to plan and track product releases.
+
+  - type: input
+    id: release-version
+    attributes:
+      label: Release Version
+      description: Version number for this release (semantic versioning)
+      placeholder: "v2.0.0 (HSM Management Interface) | v2.1.0 (Online CA Services) | v3.0.0 (Enterprise Features)"
+    validations:
+      required: true
+
+  - type: input
+    id: release-name
+    attributes:
+      label: Release Name
+      description: Codename or descriptive name for this release
+      placeholder: "ZANDD HSM Desktop Manager | Online CA Portal | Enterprise Security Suite | Certificate Validation Service"
+
+  - type: textarea
+    id: release-summary
+    attributes:
+      label: Release Summary
+      description: High-level summary of what's included in this release
+      placeholder: |
+        **v2.0.0 Example**: This release introduces the ZANDD HSM Management Interface, providing users with a comprehensive desktop application for managing TPM-backed vaults, generating ECDSA keys with hardware entropy, and integrating with ZANDD CA for certificate operations.
+        
+        **v2.1.0 Example**: This release adds online CA services including web-based certificate validation, REST API for certificate operations, and OCSP responder for real-time certificate status checking.
+        
+        **v3.0.0 Example**: This enterprise release includes role-based access control, multi-tenant vault management, high-availability clustering, and compliance reporting for enterprise deployments.
+      value: |
+        ### Release Overview
+        
+        This release delivers:
+        
+        ### Key Features
+        - 
+        - 
+        - 
+        
+        ### Target Users
+        - 
+        - 
+    validations:
+      required: true
+
+  - type: dropdown
+    id: release-type
+    attributes:
+      label: Release Type
+      description: What type of release is this?
+      options:
+        - Major Release (Breaking changes)
+        - Minor Release (New features)
+        - Patch Release (Bug fixes)
+        - Hotfix (Critical fixes)
+        - Pre-release (Beta/RC)
+      default: 1
+    validations:
+      required: true
+
+  - type: input
+    id: target-date
+    attributes:
+      label: Target Release Date
+      description: When should this release be completed?
+      placeholder: "2025-11-15"
+    validations:
+      required: true
+
+  - type: textarea
+    id: features-included
+    attributes:
+      label: Features Included
+      description: Major features and capabilities in this release
+      placeholder: |
+        - HSM Vault Management System
+        - Key CRUD Operations Interface
+        - CSR Generation and Signing
+        - Certificate Validation Service
+        - Web-based CA Management Portal
+      value: |
+        - 
+        - 
+        - 
+
+  - type: textarea
+    id: epics-included
+    attributes:
+      label: Included Epics
+      description: List of epics that are part of this release
+      placeholder: |
+        - #123 - HSM Management Interface Development
+        - #124 - Online CA Web Service
+        - #125 - Certificate Verification System
+      value: |
+        - 
+        - 
+        - 
+
+  - type: textarea
+    id: breaking-changes
+    attributes:
+      label: Breaking Changes
+      description: Any breaking changes that affect existing users
+      placeholder: "API endpoint /api/v1/keys now requires authentication headers..."
+
+  - type: textarea
+    id: migration-notes
+    attributes:
+      label: Migration Notes
+      description: Instructions for users upgrading from previous versions
+      placeholder: "Users upgrading from v1.x will need to..."
+
+  - type: textarea
+    id: release-criteria
+    attributes:
+      label: Release Criteria
+      description: Criteria that must be met before this release can ship
+      placeholder: |
+        - [ ] All planned epics completed
+        - [ ] Security review passed
+        - [ ] Performance benchmarks met
+        - [ ] Documentation updated
+        - [ ] User acceptance testing completed
+        - [ ] Zero critical bugs
+        - [ ] Deployment pipeline tested
+      value: |
+        - [ ] All planned epics completed
+        - [ ] Security review passed
+        - [ ] Performance benchmarks met
+        - [ ] Documentation updated
+        - [ ] User acceptance testing completed
+        - [ ] Zero critical bugs
+        - [ ] Deployment pipeline tested
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: External dependencies or blockers for this release
+      placeholder: "Requires completion of security audit, Windows Store certification process..."
+
+  - type: dropdown
+    id: deployment-strategy
+    attributes:
+      label: Deployment Strategy
+      description: How will this release be deployed?
+      options:
+        - Blue-Green Deployment
+        - Rolling Deployment
+        - Canary Release
+        - Feature Flags
+        - Manual Deployment
+      default: 0
+
+  - type: textarea
+    id: rollback-plan
+    attributes:
+      label: Rollback Plan
+      description: How to rollback if issues are discovered
+      placeholder: "If critical issues are found, rollback to v1.9.x using backup deployment..."
+
+  - type: textarea
+    id: testing-plan
+    attributes:
+      label: Testing Plan
+      description: Testing approach for this release
+      placeholder: |
+        - Unit tests (95% coverage)
+        - Integration tests
+        - Security penetration testing
+        - Performance testing
+        - User acceptance testing
+        - Cross-platform compatibility testing
+
+  - type: textarea
+    id: communication-plan
+    attributes:
+      label: Communication Plan
+      description: How will this release be communicated to stakeholders?
+      placeholder: |
+        - Release notes publication
+        - Blog post announcement
+        - Email notification to users
+        - Documentation updates
+        - Training materials
+
+  - type: textarea
+    id: success-metrics
+    attributes:
+      label: Success Metrics
+      description: How will success be measured for this release?
+      placeholder: |
+        - User adoption rate > 80%
+        - Customer satisfaction > 4.5/5
+        - Zero critical post-release bugs
+        - Performance targets met
+        - Documentation feedback positive
+
+  - type: textarea
+    id: post-release-tasks
+    attributes:
+      label: Post-Release Tasks
+      description: Tasks to be completed after release
+      placeholder: |
+        - [ ] Monitor system performance
+        - [ ] Collect user feedback
+        - [ ] Update documentation
+        - [ ] Plan next release
+        - [ ] Conduct retrospective
